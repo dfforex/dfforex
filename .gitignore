@@ -1,0 +1,22 @@
+# DF Forex Pro - arquivos que NAO devem ir para o GitHub
+node_modules/
+.netlify/
+dist/
+build/
+.env
+.env.local
+.env.*.local
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db
+desktop.ini
+.venv/
+venv/
+__pycache__/
+*.pyc
+.cache/
+coverage/

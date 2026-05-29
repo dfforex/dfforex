@@ -1,0 +1,24 @@
+{
+  "name": "df-forex-pro-netlify",
+  "version": "2.0.0",
+  "private": true,
+  "description": "DF Forex Pro - Painel e backend serverless Netlify sem Python local.",
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev --port 8787",
+    "build": "node scripts/build-check.js",
+    "check": "node scripts/build-check.js",
+    "start": "netlify dev --port 8787"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.48.1",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^2.8.2",
+    "netlify-cli": "^17.38.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

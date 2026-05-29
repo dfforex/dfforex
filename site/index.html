@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DF Forex Pro</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>DF Forex Pro</h1>
+      <p>Dashboard cloud sem Python local — Netlify Functions + Supabase + Deriv API.</p>
+    </div>
+    <div class="actions">
+      <button id="btnHealth">Testar API</button>
+      <button id="btnDeriv">Testar Deriv</button>
+      <button id="btnRun">Rodar análise dry-run</button>
+      <button id="btnRefresh">Atualizar</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="notice">
+      <strong>Modo seguro:</strong> esta versão não exige Python local e não envia ordem real por padrão. As chaves ficam nas variáveis de ambiente do Netlify, nunca no painel.
+    </section>
+
+    <section class="grid" id="cards"></section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Status de configuração</h2>
+        <span id="lastUpdate">-</span>
+      </div>
+      <pre id="configBox">Carregando...</pre>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Últimos sinais</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th><th>Par</th><th>Estratégia</th><th>Direção</th><th>Score</th><th>Status</th><th>Motivo</th>
+            </tr>
+          </thead>
+          <tbody id="signalsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Ordens recentes</h2>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Data</th><th>Par</th><th>Direção</th><th>Lote</th><th>Status</th><th>Lucro</th><th>Fechamento</th>
+            </tr>
+          </thead>
+          <tbody id="ordersBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Logs e retorno dos testes</h2>
+      </div>
+      <pre id="outputBox">Aguardando ação...</pre>
+    </section>
+  </main>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

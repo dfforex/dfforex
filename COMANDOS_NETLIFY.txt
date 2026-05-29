@@ -1,0 +1,8 @@
+Build command:
+npm run build
+
+Publish directory:
+site
+
+Functions directory:
+netlify/functions

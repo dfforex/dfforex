@@ -1,0 +1,3 @@
+DF Forex Pro v2 não contém chaves Supabase ou Deriv hardcoded.
+Configure as chaves somente nas variáveis de ambiente do Netlify.
+Não coloque service_role no painel, app.js, HTML ou repositório público.

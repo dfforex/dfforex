@@ -1,0 +1,7 @@
+cd /d "CAMINHO_DA_PASTA_EXTRAIDA"
+git init
+git add .
+git commit -m "DF Forex Pro v2 Netlify Node"
+git branch -M main
+git remote add origin URL_DO_SEU_REPOSITORIO
+git push -u origin main
