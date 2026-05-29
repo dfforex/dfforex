@@ -2,10 +2,10 @@
 chcp 65001 >nul
 setlocal
 cd /d "%~dp0"
-title DF Forex Pro v3.3 - Instalador Completo
+title DF Forex Pro v3.4 - Instalador Completo
 
 echo ============================================================
-echo  DF Forex Pro v3.3 - Instalador Completo Windows
+echo  DF Forex Pro v3.4 - Instalador Completo Windows
 echo ============================================================
 echo.
 echo Este BAT vai chamar o instalador PowerShell para:

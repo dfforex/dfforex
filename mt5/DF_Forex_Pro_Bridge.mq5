@@ -1,10 +1,10 @@
 //+------------------------------------------------------------------+
-//| DF Forex Pro Bridge v3.1                                         |
+//| DF Forex Pro Bridge v3.4                                         |
 //| Painel Netlify/Supabase -> MetaTrader 5                          |
 //| Coloque este arquivo em MQL5/Experts e compile no MetaEditor.     |
 //+------------------------------------------------------------------+
 #property strict
-#property version   "3.10"
+#property version   "3.40"
 #property description "DF Forex Pro MT5 Bridge: recebe comandos do painel e executa estratégia básica em conta MT5."
 
 #include <Trade/Trade.mqh>
@@ -12,7 +12,7 @@ CTrade trade;
 
 input string BridgeBaseUrl = "https://df-forex.netlify.app";
 input string BridgeId = "df-forex-main";
-input string BridgeSecret = "";
+input string BridgeSecret = "df_forex_bridge_teste_2026_05_29_trocar_depois";
 input bool   AllowRealTrading = false;
 input bool   StartPaused = true;
 input string SymbolsCsv = "EURUSD,GBPUSD,USDJPY,XAUUSD";
@@ -27,18 +27,37 @@ input int    MagicNumber = 314159;
 bool g_bot_running = false;
 datetime g_last_scan = 0;
 string g_last_error = "";
+int g_last_http_code = 0;
+string g_last_http_path = "";
+string g_last_http_response = "";
+
+void UpdateChartComment() {
+  string status = g_bot_running ? "RODANDO" : "PAUSADO";
+  Comment(
+    "DF Forex Pro Bridge v3.4\n",
+    "Status: ", status, "\n",
+    "BridgeId: ", BridgeId, "\n",
+    "Servidor: ", AccountInfoString(ACCOUNT_SERVER), " | Login: ", IntegerToString((long)AccountInfoInteger(ACCOUNT_LOGIN)), "\n",
+    "Terminal conectado: ", (TerminalInfoInteger(TERMINAL_CONNECTED) ? "SIM" : "NAO"), "\n",
+    "Trading permitido: ", ((TerminalInfoInteger(TERMINAL_TRADE_ALLOWED) && MQLInfoInteger(MQL_TRADE_ALLOWED)) ? "SIM" : "NAO"), "\n",
+    "Ultimo HTTP: ", IntegerToString(g_last_http_code), " em ", g_last_http_path, "\n",
+    "Ultimo erro: ", g_last_error
+  );
+}
 
 int OnInit() {
   g_bot_running = !StartPaused;
   trade.SetExpertMagicNumber(MagicNumber);
   EventSetTimer(5);
   ReportStatus("init", "EA iniciado");
+  UpdateChartComment();
   return(INIT_SUCCEEDED);
 }
 
 void OnDeinit(const int reason) {
   EventKillTimer();
   ReportStatus("deinit", "EA finalizado");
+  Comment("");
 }
 
 void OnTimer() {
@@ -48,6 +67,7 @@ void OnTimer() {
     g_last_scan = TimeCurrent();
     RunStrategyScan();
   }
+  UpdateChartComment();
 }
 
 void OnTick() {}
@@ -78,15 +98,27 @@ string HttpRequest(string method, string path, string body="") {
   StringToCharArray(body, data, 0, WHOLE_ARRAY, CP_UTF8);
   ResetLastError();
   int code = WebRequest(method, url, headers, 15000, data, result, result_headers);
+  g_last_http_code = code;
+  g_last_http_path = path;
   if(code == -1) {
     int err = GetLastError();
-    g_last_error = "WebRequest falhou. Erro " + IntegerToString(err) + ". Adicione a URL em Tools > Options > Expert Advisors > Allow WebRequest.";
-    Print(g_last_error);
+    g_last_error = "WebRequest falhou. Erro " + IntegerToString(err) + ". Libere WebRequest para " + BridgeBaseUrl + " em Ferramentas > Opcoes > Expert Advisors.";
+    Print("DF Forex Pro Bridge: ", g_last_error);
+    UpdateChartComment();
     return "";
   }
   string response = CharArrayToString(result, 0, -1, CP_UTF8);
+  g_last_http_response = response;
+  if(code < 200 || code >= 300) {
+    g_last_error = "HTTP " + IntegerToString(code) + " em " + path + ". Resposta: " + response;
+    Print("DF Forex Pro Bridge: ", g_last_error);
+    UpdateChartComment();
+    return "";
+  }
+  g_last_error = "";
   return response;
 }
+
 
 string JsonGetString(string json, string key) {
   string needle = "\"" + key + "\"";
@@ -141,6 +173,7 @@ void ReportStatus(string eventName, string message) {
     + "\"account_login\":\""+IntegerToString(login)+"\","
     + "\"account_name\":\""+EscapeJson(name)+"\","
     + "\"account_server\":\""+EscapeJson(server)+"\","
+    + "\"account_type\":\""+(IsRealAccount()?"real":"demo")+"\","
     + "\"balance\":"+DoubleToString(balance,2)+"," 
     + "\"equity\":"+DoubleToString(equity,2)+"," 
     + "\"margin\":"+DoubleToString(margin,2)+"," 

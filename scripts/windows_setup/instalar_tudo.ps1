@@ -90,7 +90,7 @@ function Ensure-Env {
   $mt5Login = Read-OrDefault "MT5_LOGIN (opcional)" ""
 
   $content = @"
-# DF Forex Pro v3.3 - Ambiente local
+# DF Forex Pro v3.4 - Ambiente local
 # Nao subir este arquivo para o GitHub.
 PUBLIC_SITE_URL=$siteUrl
 
@@ -257,7 +257,7 @@ MAX_OPEN_POSITIONS=2
   Write-Step "Arquivo de variaveis do Netlify criado/preenchido: $out"
 }
 
-Write-Title "DF Forex Pro v3.3 - Instalador completo Windows"
+Write-Title "DF Forex Pro v3.4 - Instalador completo Windows"
 Write-Host "Este instalador prepara o painel Netlify/Node e instala o EA Bridge no MetaTrader 5 quando encontrado." -ForegroundColor White
 Write-Host "Ele NAO habilita ordens reais. O modo inicial e DEMO / DRY_RUN." -ForegroundColor Yellow
 
@@ -267,15 +267,15 @@ try {
   Ensure-NpmInstall
   Ensure-Env
   Write-NetlifyEnvFile
-  Install-EA
+  & (Join-Path $Root "scripts\windows_setup\instalar_ea_mt5.ps1")
   Write-Step "Instalacao concluida."
   Write-Host ""
   Write-Host "Proximos passos obrigatorios:" -ForegroundColor Cyan
   Write-Host "1. Rode no Supabase: supabase/mt5_bridge_schema.sql" -ForegroundColor White
   Write-Host "2. Configure as variaveis no Netlify usando NETLIFY_ENV_COPIAR.txt" -ForegroundColor White
   Write-Host "3. No MT5, faca login na conta Deriv-Demo/Real." -ForegroundColor White
-  Write-Host "4. Arraste o EA DF_Forex_Pro_Bridge para um grafico." -ForegroundColor White
-  Write-Host "5. Configure no EA o mesmo MT5_BRIDGE_ID e MT5_BRIDGE_SECRET." -ForegroundColor White
+  Write-Host "4. Clique com o direito no Navegador > Atualizar e arraste o EA DF_Forex_Pro_Bridge para um grafico." -ForegroundColor White
+  Write-Host "5. Nesta v3.4 o EA ja vem com MT5_BRIDGE_ID/SECRET provisorios preenchidos; apenas confirme se iguais ao Netlify." -ForegroundColor White
   Write-Host "6. Teste primeiro em dry_run/demo." -ForegroundColor White
   Open-LocalhostPrompt
 } catch {

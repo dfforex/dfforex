@@ -5,4 +5,4 @@ for (const f of required) {
   if (!fs.existsSync(f)) { console.error('Arquivo ausente:', f); ok = false; }
 }
 if (!ok) process.exit(1);
-console.log('DF Forex Pro v3.1 build check OK');
+console.log('DF Forex Pro v3.4 build check OK');

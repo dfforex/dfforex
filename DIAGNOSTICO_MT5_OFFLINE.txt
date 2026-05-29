@@ -1,0 +1,41 @@
+DF Forex Pro v3.4 - Diagnostico de MT5 Offline
+
+Pelo print enviado, o painel esta Offline porque o EA Bridge ainda nao enviou heartbeat para o Netlify/Supabase.
+As causas mais comuns sao:
+
+1) O EA DF_Forex_Pro_Bridge nao foi arrastado para nenhum grafico.
+   - No MT5, abra Navegador > Expert Advisors.
+   - Clique com o direito > Atualizar.
+   - Arraste DF_Forex_Pro_Bridge para um grafico, exemplo EURUSD H1.
+
+2) WebRequest nao foi liberado.
+   - No MT5: Ferramentas > Opcoes > Expert Advisors.
+   - Marque Permitir WebRequest para URLs listadas.
+   - Adicione exatamente: https://df-forex.netlify.app
+
+3) AlgoTrading esta desligado.
+   - Ative o botao AlgoTrading na barra superior.
+   - Nas propriedades do EA, marque Permitir Algo Trading.
+
+4) BridgeSecret diferente entre Netlify e EA.
+   - Esta versao v3.4 ja vem com o BridgeSecret provisorio preenchido no EA.
+   - Mesmo assim, confirme no Netlify que MT5_BRIDGE_SECRET esta igual ao NETLIFY_ENV_COPIAR.txt.
+
+5) O EA esta instalado na pasta errada.
+   - Rode INSTALAR_E_REINSTALAR_EA_MT5.bat.
+   - Ele copia o EA para todas as pastas MQL5\Experts encontradas.
+
+Como saber se o EA esta rodando:
+- O grafico deve mostrar um comentario no canto superior esquerdo:
+  DF Forex Pro Bridge v3.4
+  Status: PAUSADO ou RODANDO
+  Ultimo HTTP: 200 em mt5-bridge-report
+
+Se aparecer HTTP 401:
+- O BridgeSecret do EA e do Netlify nao batem.
+
+Se aparecer erro WebRequest:
+- A URL https://df-forex.netlify.app nao foi liberada em Expert Advisors.
+
+Se aparecer HTTP 500:
+- Falta variavel Supabase no Netlify ou o SQL mt5_bridge_schema.sql nao foi aplicado.

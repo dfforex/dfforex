@@ -1,4 +1,4 @@
-# DF Forex Pro v3.1 — Setup MT5 Bridge
+# DF Forex Pro v3.4 — Setup MT5 Bridge
 
 Esta versão abandona o login OAuth da Deriv como conexão principal. A operação passa a ser feita por MetaTrader 5.
 

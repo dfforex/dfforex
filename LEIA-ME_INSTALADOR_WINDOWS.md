@@ -1,4 +1,4 @@
-# Instalador Windows - DF Forex Pro v3.3
+# Instalador Windows - DF Forex Pro v3.4
 
 Arquivos principais:
 
