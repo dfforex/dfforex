@@ -1,4 +1,4 @@
-# DF Forex Pro v2.5 - Retorno automático Deriv
+# DF Forex Pro v2.6 - Retorno automático Deriv
 
 Para o login voltar ao painel, use o OAuth legado da Deriv neste projeto:
 

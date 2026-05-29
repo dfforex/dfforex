@@ -12,13 +12,15 @@ export async function handler(event) {
   try {
     const cfg = getConfig();
     const origin = getOrigin(event);
+    const params = event.queryStringParameters || {};
+    const appIdOverride = String(params.app_id || '').trim();
     const callbackUrl = (cfg.deriv.oauth2.redirectUri || `${origin}/deriv-callback.html`).trim();
     const authMode = String(cfg.deriv.authMode || 'legacy_oauth').toLowerCase();
 
     // Modo recomendado para este projeto agora: OAuth legado da Deriv, porque ele retorna token1/acct1 direto
     // para o Website URL cadastrado no Application Manager. Evitamos cair em 404 quando não há client OAuth2 válido.
     if (authMode !== 'oauth2_pkce') {
-      const appId = cfg.deriv.legacyAppId || cfg.deriv.appId;
+      const appId = appIdOverride || cfg.deriv.legacyAppId || cfg.deriv.appId;
       if (!appId) {
         return json(400, {
           ok: false,
@@ -38,6 +40,7 @@ export async function handler(event) {
         callback_url: callbackUrl,
         state,
         setup_ok: true,
+        app_id_source: appIdOverride ? 'browser_override' : 'netlify_env',
         setup_hint: 'Depois do login, a Deriv deve retornar para o Website/OAuth Redirect URL cadastrado no app.'
       });
     }

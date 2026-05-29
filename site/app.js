@@ -6,6 +6,7 @@ const toast = el('toast');
 
 const STORAGE = {
   token: 'df_deriv_token',
+  tokenSource: 'df_deriv_token_source',
   loginid: 'df_deriv_loginid',
   currency: 'df_deriv_currency',
   accounts: 'df_deriv_accounts',
@@ -14,7 +15,11 @@ const STORAGE = {
   accountMode: 'df_account_mode',
   botRunning: 'df_bot_running',
   stake: 'df_stake',
-  duration: 'df_duration'
+  duration: 'df_duration',
+  derivAppId: 'df_deriv_app_id',
+  brokerMode: 'df_broker_mode',
+  mt5Server: 'df_mt5_server',
+  mt5Login: 'df_mt5_login'
 };
 
 const PAGE_META = {
@@ -24,6 +29,7 @@ const PAGE_META = {
   orders: ['Execução', 'Ordens e resultados', 'Entradas realizadas, status, ganho e perda.'],
   risk: ['Proteção', 'Controle de risco', 'Drawdown, limites e travas de segurança.'],
   strategies: ['Estratégias', 'Motores de decisão', 'Estratégias disponíveis e próximas evoluções.'],
+  performance: ['Performance', 'Performance operacional', 'Curva de equity, P/L diário e distribuição de sinais.'],
   broker: ['Integrações', 'Corretora Deriv', 'Status técnico de autenticação e ambiente.'],
   logs: ['Sistema', 'Logs técnicos', 'Retorno das chamadas e diagnóstico.']
 };
@@ -53,6 +59,7 @@ bind('btnBrokerTest', 'click', testDeriv);
 bind('btnHealth', 'click', () => callApi('/api/health'));
 bind('btnDeriv', 'click', testDeriv);
 bind('btnDerivLogin', 'click', loginWithDeriv);
+bind('btnTokenConnect', 'click', connectWithDerivToken);
 bind('btnTopDerivLogin', 'click', () => getDerivLoginId() ? showPage('operacao') : loginWithDeriv());
 bind('btnDerivLogout', 'click', logoutDeriv);
 bind('btnRun', 'click', () => runScan({ execute: false, source: 'manual_scan' }));
@@ -65,10 +72,22 @@ bind('derivAccountSelect', 'change', onDerivAccountChange);
 bind('stakeInput', 'input', () => {
   localStorage.setItem(STORAGE.stake, el('stakeInput').value);
   updateDashboardSelection();
-});
+  updateMt5Ui();
+}
+);
 bind('durationSelect', 'change', () => {
   localStorage.setItem(STORAGE.duration, el('durationSelect').value);
   updateDashboardSelection();
+});
+bind('derivAppIdInput', 'input', () => localStorage.setItem(STORAGE.derivAppId, el('derivAppIdInput').value.trim()));
+bind('btnSaveMt5', 'click', saveMt5Mode);
+bind('btnMt5Status', 'click', checkMt5Bridge);
+bind('btnMt5StatusBroker', 'click', checkMt5Bridge);
+bind('mt5ServerInput', 'input', () => { localStorage.setItem(STORAGE.mt5Server, el('mt5ServerInput').value.trim()); updateMt5Ui(); });
+bind('mt5LoginInput', 'input', () => { localStorage.setItem(STORAGE.mt5Login, el('mt5LoginInput').value.trim()); updateMt5Ui(); });
+
+document.querySelectorAll('.connect-tab').forEach((btn) => {
+  btn.addEventListener('click', () => showConnectMethod(btn.dataset.connectTab || 'token'));
 });
 
 window.addEventListener('beforeunload', () => { if (botTimer) clearInterval(botTimer); });
@@ -101,6 +120,11 @@ function setSelectedAccount(account) {
 }
 function getAccountMode() { return localStorage.getItem(STORAGE.accountMode) || el('accountModeSelect')?.value || 'demo'; }
 function getDerivToken() { return sessionStorage.getItem(STORAGE.token) || ''; }
+function getDerivTokenSource() { return sessionStorage.getItem(STORAGE.tokenSource) || ''; }
+function hasDerivAuth() {
+  const source = getDerivTokenSource();
+  return Boolean(getDerivToken() || source === 'env_demo_token' || source === 'env_live_token');
+}
 function getDerivLoginId() { return sessionStorage.getItem(STORAGE.loginid) || ''; }
 function getDerivCurrency() { return sessionStorage.getItem(STORAGE.currency) || ''; }
 function inferAccountMode(loginid = '') { return /^VRTC/i.test(String(loginid || '')) ? 'demo' : 'real'; }
@@ -114,6 +138,9 @@ function restoreFormState() {
   if (el('accountModeSelect')) el('accountModeSelect').value = mode;
   if (el('stakeInput')) el('stakeInput').value = localStorage.getItem(STORAGE.stake) || el('stakeInput').value || '1';
   if (el('durationSelect')) el('durationSelect').value = localStorage.getItem(STORAGE.duration) || el('durationSelect').value || '5';
+  if (el('derivAppIdInput')) el('derivAppIdInput').value = localStorage.getItem(STORAGE.derivAppId) || '';
+  if (el('mt5ServerInput')) el('mt5ServerInput').value = localStorage.getItem(STORAGE.mt5Server) || '';
+  if (el('mt5LoginInput')) el('mt5LoginInput').value = localStorage.getItem(STORAGE.mt5Login) || '';
   renderAccountOptions();
   updateDerivLoginStatus();
   updateDashboardSelection();
@@ -162,6 +189,84 @@ function onDerivAccountChange() {
   updateDashboardSelection();
   testDeriv();
 }
+function showConnectMethod(method = 'token') {
+  document.querySelectorAll('.connect-tab').forEach((b) => b.classList.toggle('active', b.dataset.connectTab === method));
+  document.querySelectorAll('.connect-method').forEach((p) => p.classList.toggle('active', p.dataset.connectPanel === method));
+}
+
+function saveMt5Mode() {
+  const server = (el('mt5ServerInput')?.value || '').trim();
+  const login = (el('mt5LoginInput')?.value || '').trim();
+  if (!server || !login) {
+    showToast('Informe o servidor e o Login ID do MT5.');
+    return;
+  }
+  localStorage.setItem(STORAGE.brokerMode, 'mt5_bridge');
+  localStorage.setItem(STORAGE.mt5Server, server);
+  localStorage.setItem(STORAGE.mt5Login, login);
+  updateMt5Ui();
+  showToast('Modo Deriv MT5 salvo. Instale o EA Bridge no MT5 desktop/VPS para executar ordens.');
+}
+
+function updateMt5Ui() {
+  const server = localStorage.getItem(STORAGE.mt5Server) || '-';
+  const login = localStorage.getItem(STORAGE.mt5Login) || '-';
+  if (el('brokerMt5Server')) el('brokerMt5Server').textContent = server;
+  if (el('brokerMt5Login')) el('brokerMt5Login').textContent = login;
+  const isMt5 = localStorage.getItem(STORAGE.brokerMode) === 'mt5_bridge';
+  if (el('metricBroker')) el('metricBroker').textContent = isMt5 ? 'Deriv MT5' : el('metricBroker').textContent;
+  if (el('metricBrokerStatus') && isMt5) el('metricBrokerStatus').textContent = 'Bridge configurado';
+}
+
+async function checkMt5Bridge() {
+  showPage('broker');
+  const server = localStorage.getItem(STORAGE.mt5Server) || '';
+  const login = localStorage.getItem(STORAGE.mt5Login) || '';
+  showOutput('Testando status do Bridge MT5...');
+  try {
+    const data = await callApi(`/api/mt5-bridge-status?login=${encodeURIComponent(login)}&server=${encodeURIComponent(server)}`);
+    const txt = data?.connected ? 'Online' : 'Aguardando EA';
+    if (el('brokerMt5Status')) el('brokerMt5Status').textContent = txt;
+    showToast(data?.connected ? 'Bridge MT5 online.' : 'Bridge MT5 ainda não reportou heartbeat.');
+  } catch (err) {
+    if (el('brokerMt5Status')) el('brokerMt5Status').textContent = 'Aguardando EA';
+    showToast('Bridge MT5 ainda não conectado.');
+  }
+}
+
+async function connectWithDerivToken() {
+  showPage('operacao');
+  const token = (el('derivTokenInput')?.value || '').trim();
+  if (!token) {
+    showToast('Cole o token da Deriv antes de conectar.');
+    setSetupWarning('Crie um token na Deriv com escopo Read para teste e Trade para operar. Depois cole aqui e clique em Conectar com token.');
+    return;
+  }
+  sessionStorage.setItem(STORAGE.token, token);
+  sessionStorage.setItem(STORAGE.tokenSource, 'browser_deriv_token');
+  showOutput('Validando token na Deriv...');
+  const data = await testDeriv();
+  if (!data?.authorized || !data.loginid) {
+    sessionStorage.removeItem(STORAGE.token);
+    sessionStorage.removeItem(STORAGE.tokenSource);
+    setSetupWarning(data?.error || 'Token não autorizado pela Deriv. Verifique se copiou corretamente e se possui escopo Read.');
+    return;
+  }
+  const account = { acct: data.loginid, token, currency: data.currency || 'USD', mode: inferAccountMode(data.loginid) };
+  sessionStorage.setItem(STORAGE.accounts, JSON.stringify([{ acct: account.acct, currency: account.currency, mode: account.mode }]));
+  sessionStorage.setItem(STORAGE.accountsFull, JSON.stringify([account]));
+  sessionStorage.setItem(STORAGE.loginid, account.acct);
+  sessionStorage.setItem(STORAGE.currency, account.currency || '');
+  if (el('derivTokenInput')) el('derivTokenInput').value = '';
+  localStorage.setItem(STORAGE.accountMode, account.mode);
+  if (el('accountModeSelect')) el('accountModeSelect').value = account.mode;
+  renderAccountOptions();
+  updateDerivLoginStatus();
+  updateDashboardSelection();
+  setSetupWarning('');
+  showToast(`Deriv conectada por token: ${account.acct}`);
+}
+
 function updateSelectedAccountHint() {
   const hint = el('selectedAccountHint');
   if (!hint) return;
@@ -182,7 +287,9 @@ async function loginWithDeriv() {
   showOutput('Gerando URL oficial de login da Deriv...');
   sessionStorage.setItem(STORAGE.returnTo, '/#operacao');
   try {
-    const res = await fetch('/api/deriv-oauth-url', { cache: 'no-store' });
+    const appId = (el('derivAppIdInput')?.value || localStorage.getItem(STORAGE.derivAppId) || '').trim();
+    const loginUrl = appId ? `/api/deriv-oauth-url?app_id=${encodeURIComponent(appId)}` : '/api/deriv-oauth-url';
+    const res = await fetch(loginUrl, { cache: 'no-store' });
     const data = await res.json();
     if (!data.ok || !data.authorize_url) {
       const hint = data.setup_hint || data.error || 'Não foi possível gerar URL de login Deriv.';
@@ -213,7 +320,7 @@ function setSetupWarning(message) {
   box.style.display = message ? 'block' : 'none';
 }
 function logoutDeriv() {
-  for (const key of [STORAGE.token, STORAGE.loginid, STORAGE.currency, STORAGE.accounts, STORAGE.accountsFull]) {
+  for (const key of [STORAGE.token, STORAGE.tokenSource, STORAGE.loginid, STORAGE.currency, STORAGE.accounts, STORAGE.accountsFull]) {
     sessionStorage.removeItem(key);
     localStorage.removeItem(key);
   }
@@ -231,8 +338,17 @@ async function testDeriv() {
   if (data?.authorized && data.loginid) {
     showToast(`Deriv conectada: ${data.loginid}`);
     sessionStorage.setItem(STORAGE.loginid, data.loginid);
+    sessionStorage.setItem(STORAGE.tokenSource, data.token_source || 'env_or_browser');
     if (data.currency) sessionStorage.setItem(STORAGE.currency, data.currency);
+    const mode = inferAccountMode(data.loginid);
+    localStorage.setItem(STORAGE.accountMode, mode);
+    if (el('accountModeSelect')) el('accountModeSelect').value = mode;
+    const account = { acct: data.loginid, currency: data.currency || 'USD', mode };
+    sessionStorage.setItem(STORAGE.accounts, JSON.stringify([account]));
+    sessionStorage.setItem(STORAGE.accountsFull, JSON.stringify([account]));
+    renderAccountOptions();
     updateDerivLoginStatus();
+    updateDashboardSelection();
   }
   return data;
 }
@@ -257,7 +373,7 @@ function buildRunPayload(execute) {
   };
 }
 function startOperations() {
-  if (!getDerivToken()) {
+  if (!hasDerivAuth()) {
     showToast('Conecte a Deriv antes de iniciar as operações.');
     showPage('operacao');
     return;
@@ -332,6 +448,7 @@ async function loadDashboard() {
     renderOrdersPreview(dash.orders || []);
     renderWatchlist(config.symbols || dash.status?.symbols || []);
     renderRisk(dash, config);
+    renderPerformance(dash.signals || [], dash.orders || []);
     renderLogs(dash.logs || []);
     if (configBox) configBox.textContent = JSON.stringify(toSafeConfig(config), null, 2);
     if (lastUpdate) lastUpdate.textContent = new Date().toLocaleString('pt-BR');
@@ -451,6 +568,17 @@ function renderRisk(dash, config) {
   setText('riskDaily', `${maxDaily}%`);
   if (el('riskDonutLabel')) el('riskDonutLabel').innerHTML = getAccountMode() === 'real' ? 'Atenção<br><small>Real</small>' : 'Baixo<br><small>Demo</small>';
 }
+function renderPerformance(signals, orders) {
+  setText('perfWinRate', getWinRate(orders));
+  setText('perfProfitFactor', calcProfitFactor(orders));
+  setText('perfPLTotal', calcProfit(orders));
+  const buy = (signals || []).filter((s) => String(s.direction || '').toLowerCase().includes('buy')).length;
+  const sell = (signals || []).filter((s) => String(s.direction || '').toLowerCase().includes('sell')).length;
+  setText('perfBuyCount', buy || '-');
+  setText('perfSellCount', sell || '-');
+  setText('perfSignalCount', `${(signals || []).length || 0} sinais`);
+}
+
 function renderLogs(logs) {
   if (!outputBox || outputBox.textContent !== 'Aguardando ação...') return;
   if (!logs?.length) return;
@@ -459,7 +587,7 @@ function renderLogs(logs) {
 
 function updateDerivLoginStatus(config = lastConfig) {
   const loginid = getDerivLoginId();
-  const connected = Boolean(loginid && getDerivToken());
+  const connected = Boolean(loginid && hasDerivAuth());
   const dot = el('dotDeriv');
   const pill = el('derivPill');
   if (dot) dot.className = `dot ${connected ? 'ok' : 'warn'}`;
@@ -627,6 +755,6 @@ const startHash = (window.location.hash || '#dashboard').replace('#', '') || 'da
 showPage(PAGE_META[startHash] ? startHash : 'dashboard');
 setBotRunningUI(localStorage.getItem(STORAGE.botRunning) === 'true');
 loadDashboard();
-if (localStorage.getItem(STORAGE.botRunning) === 'true' && getDerivToken()) {
+if (localStorage.getItem(STORAGE.botRunning) === 'true' && hasDerivAuth()) {
   botTimer = setInterval(() => runScan({ execute: true, source: 'auto_interval_restored' }), 60000);
 }

@@ -1,0 +1,30 @@
+CONFIGURAR TOKEN DERIV NO NETLIFY
+
+1. Abra o site no Netlify.
+2. Vá em Site configuration > Environment variables.
+3. Para conta demo, adicione:
+   DERIV_API_TOKEN_DEMO = COLE_SEU_TOKEN_DEMO_AQUI
+   ACCOUNT_TYPE = demo
+
+4. Para conta real, adicione apenas depois da demo validada:
+   DERIV_API_TOKEN_LIVE = COLE_SEU_TOKEN_REAL_AQUI
+   ACCOUNT_TYPE = real
+   ALLOW_LIVE_TRADING = true
+
+5. Para começar seguro, mantenha:
+   BOT_MODE = dry_run
+   ENABLE_ORDER_EXECUTION = false
+   DERIV_ENABLE_ORDER_EXECUTION = false
+   ALLOW_LIVE_TRADING = false
+
+6. Para liberar operação DEMO:
+   BOT_MODE = live
+   ENABLE_ORDER_EXECUTION = true
+   DERIV_ENABLE_ORDER_EXECUTION = true
+   ACCOUNT_TYPE = demo
+   ALLOW_LIVE_TRADING = false
+
+IMPORTANTE:
+- Não suba token no GitHub.
+- Não cole token em arquivo do projeto.
+- Como o token foi compartilhado fora da Deriv, o ideal é rotacionar/criar outro token depois dos testes.

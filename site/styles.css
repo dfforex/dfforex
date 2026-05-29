@@ -186,3 +186,19 @@ body.light .sidebar { background:#fff; } body.light input, body.light select { b
   .side-nav { grid-template-columns: 1fr 1fr; }
   .hero-metrics, .kpi-grid, .quick-status, .form-grid { grid-template-columns:1fr; }
 }
+
+/* v2.6 - conexão por token e layout por abas mais limpo */
+.connect-tabs { display:flex; gap:8px; padding:4px; border:1px solid rgba(108,204,255,.12); background:rgba(1,10,18,.45); border-radius:14px; margin:14px 0; }
+.connect-tab { flex:1; border:0; border-radius:10px; padding:10px 12px; color:#9fc6d8; background:transparent; font-weight:900; cursor:pointer; }
+.connect-tab.active { color:#06131c; background:linear-gradient(135deg, #37d9ff, #2ff299); box-shadow:0 0 22px rgba(0,200,255,.22); }
+.connect-method { display:none; gap:10px; }
+.connect-method.active { display:grid; }
+.full-label { grid-column:1/-1; }
+.wrap-actions { align-items:center; }
+.ghost-link { min-height:44px; display:inline-flex; align-items:center; justify-content:center; border:1px solid var(--line); border-radius:14px; padding:0 14px; color:#bfefff; text-decoration:none; background:linear-gradient(180deg, rgba(15,49,73,.74), rgba(8,29,45,.62)); font-weight:900; }
+.compact-grid { margin-top:14px; }
+.big-list strong { font-size:1.05rem; }
+
+/* dashboard fica mais respirável; detalhes pesados foram para Performance/Sinais/Ordens */
+.page-section[data-view="dashboard"] .dashboard-grid { grid-template-columns:minmax(0, 1.15fr) minmax(280px, .85fr); }
+.page-section[data-view="dashboard"] .kpi-grid { margin-top: 10px; }

@@ -1,8 +1,8 @@
 {
   "name": "df-forex-pro-netlify",
-  "version": "2.5.0",
+  "version": "2.7.0",
   "private": true,
-  "description": "DF Forex Pro - Netlify Node com abas internas e login Deriv corrigido por OAuth legado.",
+  "description": "DF Forex Pro - Netlify Node com abas internas, conexão por Token API Deriv, abas internas e ponte Deriv MT5.",
   "type": "module",
   "scripts": {
     "dev": "netlify dev --port 8787",

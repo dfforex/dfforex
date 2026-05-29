@@ -26,6 +26,7 @@
         <button class="nav-item" data-page="orders"><span>◫</span>Ordens</button>
         <button class="nav-item" data-page="risk"><span>◇</span>Risco</button>
         <button class="nav-item" data-page="strategies"><span>◎</span>Estratégias</button>
+        <button class="nav-item" data-page="performance"><span>▥</span>Performance</button>
         <button class="nav-item" data-page="broker"><span>⚡</span>Corretora</button>
         <button class="nav-item" data-page="logs"><span>⌘</span>Logs</button>
       </nav>
@@ -38,7 +39,7 @@
 
       <div class="version-card">
         <span>DF Forex Pro</span>
-        <strong>v2.5</strong>
+        <strong>v2.7</strong>
         <button id="btnSidebarRefresh">Atualizar dados</button>
       </div>
     </aside>
@@ -106,10 +107,6 @@
             <div class="watchlist" id="watchlist"></div>
           </section>
         </div>
-        <section class="chart-row">
-          <div class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">Equity</p><h2>Curva operacional</h2></div><span class="select-like">30 dias</span></div><div class="line-chart" aria-hidden="true"></div></div>
-          <div class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">P/L diário</p><h2>Resultado por dia</h2></div><span class="select-like">30 dias</span></div><div class="bar-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-        </section>
       </section>
 
       <section class="page-section" data-view="operacao">
@@ -117,8 +114,53 @@
           <div class="operation-card connect-card" id="connectCard">
             <span class="tag">1. CONEXÃO</span>
             <h2 id="connectTitle">Conectar Deriv</h2>
-            <p id="connectText">Entre pela tela oficial da Deriv. Ao finalizar, o sistema deve voltar automaticamente ao painel.</p>
-            <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Conectar Deriv</b></button>
+            <p id="connectText">Use a conexão por token para operar imediatamente. O OAuth continua disponível, mas depende do App ID correto no painel da Deriv.</p>
+
+            <div class="connect-tabs" role="tablist" aria-label="Método de conexão Deriv">
+              <button class="connect-tab active" data-connect-tab="token">Token API</button>
+              <button class="connect-tab" data-connect-tab="oauth">Login Deriv</button>
+              <button class="connect-tab" data-connect-tab="mt5">Deriv MT5</button>
+            </div>
+
+            <div class="connect-method active" data-connect-panel="token">
+              <label class="full-label">Token API Deriv
+                <input id="derivTokenInput" type="password" placeholder="Cole aqui o token criado na Deriv" autocomplete="off" />
+              </label>
+              <div class="start-actions wrap-actions">
+                <button class="primary-action" id="btnTokenConnect"><span>✓</span><b>Conectar com token</b></button>
+                <a class="ghost-link" href="https://app.deriv.com/account/api-token" target="_blank" rel="noopener">Criar token na Deriv</a>
+              </div>
+              <p class="form-note">Para operar, o token precisa ter escopos <b>Read</b> e <b>Trade</b>. Para apenas testar conexão, use somente <b>Read</b>.</p>
+            </div>
+
+            <div class="connect-method" data-connect-panel="oauth">
+              <label class="full-label">App ID Deriv opcional
+                <input id="derivAppIdInput" type="text" placeholder="Ex.: seu App ID da Deriv" autocomplete="off" />
+              </label>
+              <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Conectar Deriv via login</b></button>
+              <p class="form-note">Se aparecer <b>invalid_client</b>, o App ID está ausente/incorreto ou o Redirect URL não está cadastrado.</p>
+            </div>
+
+            <div class="connect-method" data-connect-panel="mt5">
+              <div class="mt5-info-card">
+                <b>Conta Deriv MT5 detectada</b>
+                <span>Use este modo para Forex/CFD com MetaTrader 5, lote, stop loss e take profit.</span>
+              </div>
+              <div class="form-grid">
+                <label>Servidor MT5
+                  <input id="mt5ServerInput" type="text" placeholder="Ex.: Deriv-Demo" autocomplete="off" />
+                </label>
+                <label>Login ID MT5
+                  <input id="mt5LoginInput" type="text" placeholder="Ex.: 32243508" autocomplete="off" />
+                </label>
+              </div>
+              <div class="start-actions wrap-actions">
+                <button class="primary-action" id="btnSaveMt5"><span>✓</span><b>Salvar modo MT5</b></button>
+                <button class="action-button" id="btnMt5Status"><span>↔</span>Testar Bridge MT5</button>
+              </div>
+              <p class="form-note">O Web Terminal da Deriv mostra o login, mas não roda Expert Advisor. Para operar automaticamente em MT5, instale o MT5 desktop/VPS e o arquivo <b>mt5/DF_Forex_Pro_Bridge.mq5</b>.</p>
+            </div>
+
             <button class="ghost-action compact" id="btnDerivLogout">Sair / Trocar conta</button>
             <div class="setup-warning" id="derivSetupWarning"></div>
           </div>
@@ -201,11 +243,39 @@
         </div>
       </section>
 
+      <section class="page-section" data-view="performance">
+        <section class="chart-row">
+          <div class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">Equity</p><h2>Curva operacional</h2></div><span class="select-like">30 dias</span></div><div class="line-chart" aria-hidden="true"></div></div>
+          <div class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">P/L diário</p><h2>Resultado por dia</h2></div><span class="select-like">30 dias</span></div><div class="bar-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+        </section>
+        <div class="dashboard-grid compact-grid">
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Performance</p><h2>Indicadores</h2></div></div>
+            <div class="risk-list big-list"><div><span>Win rate</span><strong id="perfWinRate">-</strong></div><div><span>Profit factor</span><strong id="perfProfitFactor">-</strong></div><div><span>P/L total</span><strong id="perfPLTotal">-</strong></div></div>
+          </section>
+          <section class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Distribuição</p><h2>Sinais por direção</h2></div></div>
+            <div class="risk-card"><div class="risk-donut"><span>BUY/SELL<br><small id="perfSignalCount">-</small></span></div><div class="risk-list"><div><span>Compras</span><strong id="perfBuyCount">-</strong></div><div><span>Vendas</span><strong id="perfSellCount">-</strong></div></div></div>
+          </section>
+        </div>
+      </section>
+
       <section class="page-section" data-view="broker">
-        <div class="panel">
-          <div class="panel-head"><div><p class="eyebrow">Corretora</p><h2>Deriv API</h2></div><button class="mini-button" id="btnBrokerTest">Testar conexão</button></div>
-          <p class="subtitle">O login é feito pela página oficial da Deriv. O DF Forex Pro recebe apenas o token autorizado e usa esse token para testar saldo, gerar sinais e executar contratos se as travas estiverem liberadas.</p>
-          <pre id="configBox">Aguardando configuração...</pre>
+        <div class="dashboard-grid compact-grid">
+          <div class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Corretora</p><h2>Deriv API / Token</h2></div><button class="mini-button" id="btnBrokerTest">Testar conexão</button></div>
+            <p class="subtitle">Modo recomendado para contratos Deriv API. O painel recebe token autorizado e executa apenas se as travas estiverem liberadas.</p>
+            <pre id="configBox">Aguardando configuração...</pre>
+          </div>
+          <div class="panel">
+            <div class="panel-head"><div><p class="eyebrow">Corretora</p><h2>Deriv MT5 Bridge</h2></div><button class="mini-button" id="btnMt5StatusBroker">Status Bridge</button></div>
+            <p class="subtitle">Modo recomendado para Forex/CFD tradicional. O painel envia comandos; o Expert Advisor no MT5 desktop/VPS executa e devolve resultados.</p>
+            <div class="risk-list big-list">
+              <div><span>Servidor MT5</span><strong id="brokerMt5Server">-</strong></div>
+              <div><span>Login MT5</span><strong id="brokerMt5Login">-</strong></div>
+              <div><span>Status Bridge</span><strong id="brokerMt5Status">Aguardando</strong></div>
+            </div>
+          </div>
         </div>
       </section>
 
