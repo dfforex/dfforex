@@ -1,8 +1,8 @@
 {
   "name": "df-forex-pro-netlify",
-  "version": "2.4.0",
+  "version": "2.5.0",
   "private": true,
-  "description": "DF Forex Pro - Netlify Node com layout premium e retorno automático corrigido do login Deriv.",
+  "description": "DF Forex Pro - Netlify Node com abas internas e login Deriv corrigido por OAuth legado.",
   "type": "module",
   "scripts": {
     "dev": "netlify dev --port 8787",

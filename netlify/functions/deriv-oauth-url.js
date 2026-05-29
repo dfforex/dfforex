@@ -13,45 +13,65 @@ export async function handler(event) {
     const cfg = getConfig();
     const origin = getOrigin(event);
     const callbackUrl = (cfg.deriv.oauth2.redirectUri || `${origin}/deriv-callback.html`).trim();
+    const authMode = String(cfg.deriv.authMode || 'legacy_oauth').toLowerCase();
 
-    // Preferência: OAuth 2.0 PKCE, porque permite redirect_uri explícito e retorno automático confiável.
-    if (cfg.deriv.oauth2.clientId) {
-      const pkce = generatePkcePair();
-      const authorizeUrl = buildOAuth2PkceUrl({
-        clientId: cfg.deriv.oauth2.clientId,
-        redirectUri: callbackUrl,
-        scope: cfg.deriv.oauth2.scope,
-        state: pkce.state,
-        codeChallenge: pkce.codeChallenge,
-        legacyAppId: cfg.deriv.legacyAppId
-      });
+    // Modo recomendado para este projeto agora: OAuth legado da Deriv, porque ele retorna token1/acct1 direto
+    // para o Website URL cadastrado no Application Manager. Evitamos cair em 404 quando não há client OAuth2 válido.
+    if (authMode !== 'oauth2_pkce') {
+      const appId = cfg.deriv.legacyAppId || cfg.deriv.appId;
+      if (!appId) {
+        return json(400, {
+          ok: false,
+          mode: 'legacy_oauth',
+          callback_url: callbackUrl,
+          setup_ok: false,
+          error: 'DERIV_LEGACY_APP_ID não configurado no Netlify.',
+          setup_hint: 'Crie/abra seu app em api.deriv.com > Applications/Application Manager, copie o App ID e coloque no Netlify como DERIV_LEGACY_APP_ID. No app da Deriv, configure o Website/OAuth Redirect URL exatamente como https://df-forex.netlify.app/deriv-callback.html.'
+        });
+      }
+      const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
       return json(200, {
         ok: true,
-        mode: 'oauth2_pkce',
-        authorize_url: authorizeUrl,
+        mode: 'legacy_oauth',
+        app_id: appId,
+        authorize_url: buildLegacyOAuthUrl({ appId, state }),
         callback_url: callbackUrl,
-        state: pkce.state,
-        code_verifier: pkce.codeVerifier,
+        state,
         setup_ok: true,
-        setup_hint: 'OAuth2 PKCE ativo. A Deriv deve retornar para callback_url com code e state.'
+        setup_hint: 'Depois do login, a Deriv deve retornar para o Website/OAuth Redirect URL cadastrado no app.'
       });
     }
 
-    // Fallback: OAuth legado. Neste modo a Deriv só volta para o painel se o Website URL do app_id estiver correto.
-    const state = Math.random().toString(36).slice(2) + Date.now().toString(36);
-    const legacyDefaultWarning = !cfg.deriv.legacyAppId || cfg.deriv.legacyAppId === '1089';
+    // OAuth2 PKCE só deve ser usado se você realmente tiver client_id OAuth2 moderno registrado.
+    if (!cfg.deriv.oauth2.clientId) {
+      return json(400, {
+        ok: false,
+        mode: 'oauth2_pkce',
+        callback_url: callbackUrl,
+        setup_ok: false,
+        error: 'DERIV_AUTH_MODE=oauth2_pkce, mas DERIV_OAUTH_CLIENT_ID não está configurado.',
+        setup_hint: 'Para evitar 404, use DERIV_AUTH_MODE=legacy_oauth com DERIV_LEGACY_APP_ID, ou configure um client OAuth2 PKCE válido com redirect_uri exato.'
+      });
+    }
+
+    const pkce = generatePkcePair();
+    const authorizeUrl = buildOAuth2PkceUrl({
+      clientId: cfg.deriv.oauth2.clientId,
+      redirectUri: callbackUrl,
+      scope: cfg.deriv.oauth2.scope,
+      state: pkce.state,
+      codeChallenge: pkce.codeChallenge,
+      legacyAppId: cfg.deriv.legacyAppId
+    });
     return json(200, {
       ok: true,
-      mode: 'legacy_oauth_websocket',
-      app_id: cfg.deriv.legacyAppId,
-      authorize_url: buildLegacyOAuthUrl({ appId: cfg.deriv.legacyAppId, state }),
+      mode: 'oauth2_pkce',
+      authorize_url: authorizeUrl,
       callback_url: callbackUrl,
-      state,
-      setup_ok: !legacyDefaultWarning,
-      warning: legacyDefaultWarning
-        ? 'DERIV_LEGACY_APP_ID está vazio ou usando 1089. Com app_id padrão a Deriv pode mandar para home.deriv.com em vez do seu painel.'
-        : '',
-      setup_hint: 'Cadastre no app/API legacy da Deriv o Website URL exatamente como callback_url. Para seu site: https://df-forex.netlify.app/deriv-callback.html'
+      state: pkce.state,
+      code_verifier: pkce.codeVerifier,
+      setup_ok: true,
+      setup_hint: 'OAuth2 PKCE ativo. A Deriv deve retornar para callback_url com code e state.'
     });
   } catch (err) {
     return json(500, { ok: false, error: safeError(err) });

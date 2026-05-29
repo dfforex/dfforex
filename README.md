@@ -1,4 +1,4 @@
-# DF Forex Pro v2.4 — Netlify + Deriv + Supabase
+# DF Forex Pro v2.5 — Netlify + Deriv + Supabase
 
 Painel operacional para automação Forex/Deriv com:
 
@@ -79,6 +79,16 @@ ALLOW_LIVE_TRADING=true
 O painel ainda exige seleção de Conta Real e confirmação antes de iniciar.
 
 
-## Correção Deriv retorno automático v2.4
+## Correção Deriv retorno automático v2.5
 
 Configure `PUBLIC_SITE_URL=https://df-forex.netlify.app` e use OAuth2 PKCE com `DERIV_OAUTH_CLIENT_ID` sempre que possível. O callback obrigatório é `https://df-forex.netlify.app/deriv-callback.html`. Consulte `docs/DERIV_RETORNO_AUTOMATICO.md`.
+
+
+## v2.5 - Ajuste importante Deriv + abas
+
+- O layout foi separado por abas internas: Dashboard, Operação, Sinais, Ordens, Risco, Estratégias, Corretora e Logs.
+- A Dashboard agora mostra apenas resumo, KPIs, últimas entradas e watchlist.
+- A aba Operação concentra Conectar Deriv, seleção Demo/Real, stake, duração e botões Iniciar/Pausar.
+- O login Deriv foi ajustado para usar `DERIV_AUTH_MODE=legacy_oauth` por padrão, evitando o 404 causado por OAuth2 PKCE sem client válido.
+- No app da Deriv, o Website/OAuth Redirect URL deve ser exatamente: `https://df-forex.netlify.app/deriv-callback.html`.
+
