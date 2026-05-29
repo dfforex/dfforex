@@ -38,3 +38,12 @@ td { color: #eafff2; }
 .badge.danger { background: rgba(255,107,107,.16); color: var(--danger); }
 @media (max-width: 900px) { .topbar { flex-direction: column; align-items: flex-start; } .grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } .actions { width: 100%; } button { width: 100%; } }
+
+.secondary { background: rgba(255,255,255,.08); color: var(--text); border: 1px solid var(--line); }
+.auth-panel { background: rgba(18,44,34,.74); border: 1px solid var(--line); border-radius: 16px; padding: 14px 16px; margin: 0 0 18px; display: flex; justify-content: space-between; gap: 16px; align-items: center; flex-wrap: wrap; }
+.auth-panel small { color: var(--muted); }
+.ok-text { color: #90ffba; font-weight: 800; }
+.warn-text { color: var(--warn); font-weight: 800; }
+.callback-container { width: min(760px, calc(100% - 28px)); margin: 80px auto; }
+.callback-actions { margin-top: 16px; justify-content: flex-start; }
+@media (max-width: 720px) { .auth-panel { align-items: flex-start; } }

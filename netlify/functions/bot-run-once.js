@@ -5,10 +5,11 @@ import { trendPullbackSignal } from '../../lib/strategyTrendPullback.js';
 import { evaluateRisk } from '../../lib/riskEngine.js';
 import { getSupabaseAdmin, insertLog } from '../../lib/supabaseAdmin.js';
 
-export async function handler() {
+export async function handler(event) {
   const cfg = getConfig();
   const granularitySeconds = Number(cfg.timeframeMinutes || 60) * 60;
   const supabase = getSupabaseAdmin();
+  const hasBrowserDerivLogin = Boolean((event.headers?.authorization || event.headers?.Authorization || '').startsWith('Bearer '));
 
   try {
     const results = [];
@@ -53,7 +54,8 @@ export async function handler() {
       ok: true,
       mode: cfg.botMode,
       execution: 'dry_run_or_blocked_by_default',
-      results
+      results,
+      deriv_browser_login_detected: hasBrowserDerivLogin
     });
   } catch (err) {
     await insertLog('error', 'Erro em bot-run-once', { error: safeError(err) });

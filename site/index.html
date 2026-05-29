@@ -14,6 +14,8 @@
     </div>
     <div class="actions">
       <button id="btnHealth">Testar API</button>
+      <button id="btnDerivLogin">Entrar com Deriv</button>
+      <button id="btnDerivLogout" class="secondary">Sair Deriv</button>
       <button id="btnDeriv">Testar Deriv</button>
       <button id="btnRun">Rodar análise dry-run</button>
       <button id="btnRefresh">Atualizar</button>
@@ -23,6 +25,13 @@
   <main class="container">
     <section class="notice">
       <strong>Modo seguro:</strong> esta versão não exige Python local e não envia ordem real por padrão. As chaves ficam nas variáveis de ambiente do Netlify, nunca no painel.
+    </section>
+
+    <section class="auth-panel">
+      <div>
+        <strong>Status Deriv:</strong> <span id="derivLoginStatus">Não conectado pelo navegador</span>
+      </div>
+      <small>O login abre a tela oficial da Deriv. O DF Forex Pro não coleta sua senha.</small>
     </section>
 
     <section class="grid" id="cards"></section>

@@ -1,4 +1,4 @@
-# DF Forex Pro v2 — Netlify/Node, sem Python local
+# DF Forex Pro v2.1 — Netlify/Node, sem Python local, com Login Deriv
 
 Esta versão foi criada para subir no GitHub e publicar no Netlify sem depender de Python no computador.
 
@@ -8,6 +8,7 @@ Esta versão foi criada para subir no GitHub e publicar no Netlify sem depender 
 - Usa Netlify Functions em Node.js como backend.
 - Lê dados do Supabase somente no backend.
 - Testa conexão com Deriv API via WebSocket.
+- Inclui botão “Entrar com Deriv”, usando a tela oficial da Deriv, sem coletar senha no painel.
 - Busca candles da Deriv.
 - Roda a estratégia inicial `DF_TREND_PULLBACK_CORE` em modo `dry_run`.
 - Registra sinais e rejeições no Supabase quando as variáveis de ambiente estiverem configuradas.
@@ -154,3 +155,26 @@ DERIV_ENABLE_ORDER_EXECUTION=false
 ```
 
 Para desenvolver estratégia, use somente demo/dry-run.
+
+
+## Login com Deriv
+
+A Deriv não deve receber login e senha dentro do nosso painel. O fluxo implementado abre a página oficial da Deriv e retorna para:
+
+```text
+/deriv-callback.html
+```
+
+Configure o Website URL do app no painel Deriv API como:
+
+```text
+https://SEU-SITE.netlify.app/deriv-callback.html
+```
+
+Para testes locais via Netlify Dev, use:
+
+```text
+http://localhost:8787/deriv-callback.html
+```
+
+O token retornado fica apenas na sessão do navegador e é enviado ao backend via `Authorization: Bearer` quando você clica em **Testar Deriv** ou **Rodar análise dry-run**.

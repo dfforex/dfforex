@@ -1,5 +1,6 @@
 import { json } from '../../lib/http.js';
 import { getConfig, executionIsHardBlocked } from '../../lib/config.js';
+import { getSafeAuthStatus } from '../../lib/derivAuth.js';
 
 export async function handler() {
   const cfg = getConfig();
@@ -11,9 +12,11 @@ export async function handler() {
     },
     deriv: {
       app_id_configured: Boolean(cfg.deriv.appId),
+      legacy_app_id_configured: Boolean(cfg.deriv.legacyAppId),
       demo_token_configured: Boolean(cfg.deriv.tokenDemo),
       live_token_configured: Boolean(cfg.deriv.tokenLive),
-      trade_mode: cfg.deriv.tradeMode
+      trade_mode: cfg.deriv.tradeMode,
+      auth: getSafeAuthStatus()
     },
     safety: {
       bot_mode: cfg.botMode,
