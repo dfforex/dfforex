@@ -1,64 +1,32 @@
-# Deriv API no DF Forex Pro
+# Deriv no DF Forex Pro
 
-Esta versão usa Deriv API por WebSocket dentro de funções serverless e agora inclui login pela tela oficial da Deriv.
+## Login seguro
 
-## Opções de autenticação
-
-### 1. Login oficial Deriv no navegador — recomendado para teste manual
-
-O botão **Entrar com Deriv** redireciona o usuário para a tela oficial da Deriv.
-
-O DF Forex Pro **não coleta login nem senha**. A senha é digitada apenas na página oficial da Deriv.
-
-Depois do login, a Deriv retorna para:
+O DF Forex Pro não pede e-mail/senha da Deriv dentro do nosso painel. O botão **Conectar Deriv** abre a tela oficial da Deriv via OAuth. Depois que o usuário aprova, a Deriv redireciona para:
 
 ```text
-https://SEU-SITE.netlify.app/deriv-callback.html
+https://delicate-longma-e8f8d2.netlify.app/deriv-callback.html
 ```
 
-No painel de app da Deriv API, configure o **Website URL** exatamente com essa URL.
+O callback salva o token somente na sessão do navegador e retorna automaticamente para o painel principal.
 
-Variáveis:
+## Configuração obrigatória
 
-```env
-DERIV_AUTH_MODE=legacy_oauth_or_pat
-DERIV_APP_ID=SEU_APP_ID_DERIV
-DERIV_LEGACY_APP_ID=SEU_APP_ID_DERIV
+No cadastro do app/API da Deriv, coloque o Website URL:
+
+```text
+https://delicate-longma-e8f8d2.netlify.app/deriv-callback.html
 ```
 
-### 2. Token manual/PAT por ambiente — bom para automações backend
+Local:
 
-```env
-DERIV_API_TOKEN_DEMO=SEU_TOKEN_DEMO_DERIV
-DERIV_API_TOKEN_LIVE=
+```text
+http://localhost:8787/deriv-callback.html
 ```
 
-Use token demo primeiro.
+## Segurança
 
-### 3. OAuth2 PKCE moderno — preparado, mas ainda não é a rota principal do robô
-
-A Deriv possui OAuth2 com Authorization Code + PKCE. Esta versão inclui `/api/deriv-oauth-exchange`, mas a rota principal do robô continua usando WebSocket v3. Para WebSocket v3, use login legado ou PAT.
-
-## Testes disponíveis
-
-- `/api/deriv-test`: testa conexão, autorização e lista símbolos.
-- `/api/deriv-oauth-url`: gera URL oficial de login Deriv legado.
-- `/api/deriv-candles?symbol=frxEURUSD&granularity=3600&count=240`: busca candles.
-- `/api/bot-run-once`: busca candles, calcula sinal e salva no Supabase.
-
-## Modos
-
-Modo inicial seguro:
-
-```env
-BOT_MODE=dry_run
-ACCOUNT_TYPE=demo
-ENABLE_ORDER_EXECUTION=false
-DERIV_ENABLE_ORDER_EXECUTION=false
-```
-
-Esse modo não envia ordens.
-
-## Observação importante
-
-Netlify Functions não são ideais para manter WebSocket conectado 24h. Para execução real contínua, usar worker separado.
+- A senha da Deriv nunca passa pelo DF Forex Pro.
+- Tokens de ambiente ficam no Netlify, não no GitHub.
+- O token vindo do login Deriv fica no navegador/sessão.
+- Execução real continua bloqueada até ativação manual e validação.

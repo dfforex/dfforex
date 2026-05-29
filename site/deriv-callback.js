@@ -3,17 +3,18 @@ const STORAGE = {
   token: 'df_deriv_token',
   loginid: 'df_deriv_loginid',
   currency: 'df_deriv_currency',
-  accounts: 'df_deriv_accounts'
+  accounts: 'df_deriv_accounts',
+  returnTo: 'df_deriv_return_to'
 };
 
-document.getElementById('btnGoHome').addEventListener('click', () => { window.location.href = '/'; });
+document.getElementById('btnGoHome').addEventListener('click', () => goHome('connected'));
 document.getElementById('btnClear').addEventListener('click', () => {
   for (const key of Object.values(STORAGE)) {
     sessionStorage.removeItem(key);
     localStorage.removeItem(key);
   }
   output.textContent = 'Conexão local removida. Voltando ao painel...';
-  setTimeout(() => { window.location.href = '/'; }, 900);
+  setTimeout(() => goHome('error'), 500);
 });
 
 function paramsFromUrl() {
@@ -39,11 +40,20 @@ function saveAccount(account) {
   sessionStorage.setItem(STORAGE.currency, account.currency || '');
 }
 
+function goHome(status = 'connected') {
+  const stored = sessionStorage.getItem(STORAGE.returnTo) || '/';
+  let target = stored && stored.startsWith('/') ? stored : '/';
+  const url = new URL(target, window.location.origin);
+  url.searchParams.set('deriv', status);
+  window.location.replace(url.toString());
+}
+
 async function processCallback() {
   const params = paramsFromUrl();
   const error = params.query.get('error') || params.hash.get('error');
   if (error) {
-    output.textContent = `Login cancelado ou rejeitado pela Deriv.\n\nErro: ${error}\n${params.query.get('error_description') || params.hash.get('error_description') || ''}`;
+    output.textContent = `Login cancelado ou rejeitado pela Deriv. Voltando ao painel...`;
+    setTimeout(() => goHome('error'), 900);
     return;
   }
 
@@ -53,24 +63,24 @@ async function processCallback() {
     const demo = legacyAccounts.find((a) => /^VRTC/i.test(a.acct));
     const selected = demo || legacyAccounts[0];
     saveAccount(selected);
-    output.textContent = `Login Deriv conectado com sucesso.\n\nConta selecionada: ${selected.acct}\nMoeda: ${selected.currency || '-'}\nContas recebidas: ${legacyAccounts.map((a) => `${a.acct}/${a.currency || '-'}`).join(', ')}\n\nVoltando ao painel...`;
-    setTimeout(() => { window.location.href = '/'; }, 1600);
+    output.textContent = `Conta Deriv conectada: ${selected.acct}. Voltando automaticamente para o painel...`;
+    setTimeout(() => goHome('connected'), 350);
     return;
   }
 
-  // Suporte opcional ao OAuth2 moderno com PKCE.
-  // Observação: o robô v2 usa WebSocket v3; para operar via WebSocket, prefira o OAuth legado/PAT.
   const code = params.query.get('code');
   const state = params.query.get('state');
   const expectedState = sessionStorage.getItem('df_deriv_oauth_state');
   const codeVerifier = sessionStorage.getItem('df_deriv_pkce_code_verifier');
   if (code) {
     if (!expectedState || state !== expectedState) {
-      output.textContent = 'State OAuth inválido. Por segurança, o login foi recusado.';
+      output.textContent = 'State OAuth inválido. Voltando ao painel...';
+      setTimeout(() => goHome('error'), 900);
       return;
     }
     if (!codeVerifier) {
-      output.textContent = 'code_verifier não encontrado no navegador. Gere o login novamente.';
+      output.textContent = 'code_verifier não encontrado. Gere o login novamente.';
+      setTimeout(() => goHome('error'), 1200);
       return;
     }
     const res = await fetch('/api/deriv-oauth-exchange', {
@@ -80,21 +90,25 @@ async function processCallback() {
     });
     const data = await res.json();
     if (!data.ok) {
-      output.textContent = `Falha no OAuth2 Deriv:\n${JSON.stringify(data, null, 2)}`;
+      output.textContent = `Falha no OAuth2 Deriv. Voltando ao painel...`;
+      setTimeout(() => goHome('error'), 1200);
       return;
     }
     sessionStorage.setItem(STORAGE.token, data.access_token);
-    sessionStorage.setItem(STORAGE.loginid, 'oauth2_pkce');
-    output.textContent = `OAuth2 conectado. Token salvo apenas nesta sessão do navegador.\n\nVoltando ao painel...`;
+    sessionStorage.setItem(STORAGE.loginid, data.loginid || 'oauth2_pkce');
+    sessionStorage.setItem(STORAGE.currency, data.currency || '');
     sessionStorage.removeItem('df_deriv_oauth_state');
     sessionStorage.removeItem('df_deriv_pkce_code_verifier');
-    setTimeout(() => { window.location.href = '/'; }, 1600);
+    output.textContent = 'OAuth2 conectado. Voltando automaticamente para o painel...';
+    setTimeout(() => goHome('connected'), 350);
     return;
   }
 
-  output.textContent = `Não encontrei token de sessão Deriv no retorno.\n\nVerifique se o Website URL do app Deriv está configurado como:\n${window.location.origin}/deriv-callback.html\n\nURL recebida:\n${window.location.href}`;
+  output.textContent = `Não encontrei token de sessão Deriv no retorno. Verifique se o Website URL do app Deriv está configurado como ${window.location.origin}/deriv-callback.html. Voltando ao painel...`;
+  setTimeout(() => goHome('error'), 2200);
 }
 
 processCallback().catch((err) => {
-  output.textContent = `Erro ao processar callback Deriv: ${err.message}`;
+  output.textContent = `Erro ao processar callback Deriv: ${err.message}. Voltando ao painel...`;
+  setTimeout(() => goHome('error'), 1400);
 });

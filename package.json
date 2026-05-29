@@ -1,8 +1,8 @@
 {
   "name": "df-forex-pro-netlify",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "private": true,
-  "description": "DF Forex Pro - Netlify Node com Supabase e login oficial Deriv.",
+  "description": "DF Forex Pro - Netlify Node com layout premium e retorno automático do login Deriv.",
   "type": "module",
   "scripts": {
     "dev": "netlify dev --port 8787",

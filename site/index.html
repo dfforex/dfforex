@@ -3,87 +3,200 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#06131c" />
   <title>DF Forex Pro</title>
+  <link rel="icon" type="image/png" href="/assets/df-logo.png" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>DF Forex Pro</h1>
-      <p>Dashboard cloud sem Python local — Netlify Functions + Supabase + Deriv API.</p>
-    </div>
-    <div class="actions">
-      <button id="btnHealth">Testar API</button>
-      <button id="btnDerivLogin">Entrar com Deriv</button>
-      <button id="btnDerivLogout" class="secondary">Sair Deriv</button>
-      <button id="btnDeriv">Testar Deriv</button>
-      <button id="btnRun">Rodar análise dry-run</button>
-      <button id="btnRefresh">Atualizar</button>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="notice">
-      <strong>Modo seguro:</strong> esta versão não exige Python local e não envia ordem real por padrão. As chaves ficam nas variáveis de ambiente do Netlify, nunca no painel.
-    </section>
-
-    <section class="auth-panel">
-      <div>
-        <strong>Status Deriv:</strong> <span id="derivLoginStatus">Não conectado pelo navegador</span>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand-block">
+        <img src="/assets/df-logo.png" alt="DF Forex Pro" class="brand-logo" />
+        <div>
+          <strong>DF Forex Pro</strong>
+          <span>Automação Forex</span>
+        </div>
       </div>
-      <small>O login abre a tela oficial da Deriv. O DF Forex Pro não coleta sua senha.</small>
-    </section>
 
-    <section class="grid" id="cards"></section>
+      <nav class="side-nav" aria-label="Menu principal">
+        <button class="nav-item active" data-section="dashboard"><span>▦</span>Dashboard</button>
+        <button class="nav-item" data-section="signals"><span>⇄</span>Sinais</button>
+        <button class="nav-item" data-section="orders"><span>◫</span>Ordens</button>
+        <button class="nav-item" data-section="risk"><span>◇</span>Risco</button>
+        <button class="nav-item" data-section="strategies"><span>◎</span>Estratégias</button>
+        <button class="nav-item" data-section="broker"><span>⚡</span>Corretora</button>
+      </nav>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Status de configuração</h2>
-        <span id="lastUpdate">-</span>
+      <div class="integration-box">
+        <small>INTEGRAÇÕES</small>
+        <div class="integration-line"><span class="dot" id="dotSupabase"></span> Supabase</div>
+        <div class="integration-line"><span class="dot" id="dotDeriv"></span> Deriv API</div>
       </div>
-      <pre id="configBox">Carregando...</pre>
-    </section>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Últimos sinais</h2>
+      <div class="version-card">
+        <span>DF Forex Pro</span>
+        <strong>v2.2</strong>
+        <button id="btnSidebarRefresh">Atualizar dados</button>
       </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th><th>Par</th><th>Estratégia</th><th>Direção</th><th>Score</th><th>Status</th><th>Motivo</th>
-            </tr>
-          </thead>
-          <tbody id="signalsBody"></tbody>
-        </table>
-      </div>
-    </section>
+    </aside>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Ordens recentes</h2>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Data</th><th>Par</th><th>Direção</th><th>Lote</th><th>Status</th><th>Lucro</th><th>Fechamento</th>
-            </tr>
-          </thead>
-          <tbody id="ordersBody"></tbody>
-        </table>
-      </div>
-    </section>
+    <main class="main-area">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Painel operacional</p>
+          <h1>Dashboard de automação Forex</h1>
+          <span class="subtitle">Netlify + Supabase + Deriv API em modo seguro.</span>
+        </div>
+        <div class="top-actions">
+          <div class="status-pill" id="supabasePill"><span class="dot"></span><div><b>Supabase</b><small>Verificando</small></div></div>
+          <div class="status-pill" id="derivPill"><span class="dot"></span><div><b>Deriv API</b><small>Não conectado</small></div></div>
+          <button class="icon-button" id="btnTheme" title="Alternar visual">◐</button>
+          <div class="user-chip"><span>DF</span><div><b>Demo Trader</b><small>Administrador</small></div></div>
+        </div>
+      </header>
 
-    <section class="panel">
-      <div class="panel-head">
-        <h2>Logs e retorno dos testes</h2>
-      </div>
-      <pre id="outputBox">Aguardando ação...</pre>
-    </section>
-  </main>
+      <section class="hero-card">
+        <div class="mode-block">
+          <div class="bot-icon">🤖</div>
+          <div>
+            <span class="tag">MODO ATIVO</span>
+            <h2 id="modeTitle">DEMO / DRY RUN</h2>
+            <p>Execução simulada. Nenhuma ordem real é enviada por padrão.</p>
+          </div>
+        </div>
+        <div class="hero-metrics">
+          <div><span>Broker</span><strong id="metricBroker">-</strong><small id="metricBrokerStatus">Aguardando</small></div>
+          <div><span>Equity</span><strong id="metricEquity">-</strong><small>USD</small></div>
+          <div><span>P/L diário</span><strong id="metricPL">-</strong><small class="positive">Dry-run</small></div>
+          <div><span>Drawdown</span><strong id="metricDrawdown">-</strong><small>Trava ativa</small></div>
+          <div><span>Risco</span><strong id="metricRisk">Seguro</strong><small>Baixo</small></div>
+          <div><span>Status do Bot</span><strong id="metricBotStatus">Pausado</strong><small id="metricBotSince">Aguardando scan</small></div>
+        </div>
+      </section>
 
+      <section class="action-row">
+        <button class="primary-action" id="btnDerivLogin"><span>↗</span>Conectar Deriv</button>
+        <button class="action-button" id="btnDeriv"><span>✓</span>Testar Deriv</button>
+        <button class="action-button" id="btnRun"><span>◉</span>Run Scan</button>
+        <button class="warning-action" id="btnPause"><span>Ⅱ</span>Pausar Bot</button>
+        <button class="action-button" id="btnRefresh"><span>⟳</span>Atualizar</button>
+        <button class="ghost-action" id="btnDerivLogout">Sair Deriv</button>
+      </section>
+
+      <section class="notice" id="noticeBox">
+        <strong>Ambiente seguro:</strong> chaves secretas ficam somente no Netlify/Supabase backend. O login da Deriv abre a tela oficial da Deriv e retorna automaticamente para este painel.
+      </section>
+
+      <div class="content-grid">
+        <section class="center-stack">
+          <div class="tabs">
+            <button class="tab active">Visão Geral</button>
+            <button class="tab">Sinais Recentes</button>
+            <button class="tab">Ordens Recentes</button>
+            <button class="tab">Performance</button>
+            <button class="tab">Atividade</button>
+          </div>
+
+          <section class="kpi-grid" id="cards"></section>
+
+          <section class="two-columns">
+            <div class="panel" id="signalsPanel">
+              <div class="panel-head">
+                <div><p class="eyebrow">Sinais</p><h2>Últimos sinais</h2></div>
+                <button class="mini-button" data-scroll="signalsPanel">Ver todos</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Data/Hora</th><th>Par</th><th>Direção</th><th>Estratégia</th><th>Score</th><th>Status</th></tr></thead>
+                  <tbody id="signalsBody"></tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="panel" id="ordersPanel">
+              <div class="panel-head">
+                <div><p class="eyebrow">Ordens</p><h2>Ordens recentes</h2></div>
+                <button class="mini-button" data-scroll="ordersPanel">Ver todas</button>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Data/Hora</th><th>Par</th><th>Direção</th><th>Lote</th><th>Status</th><th>P/L</th></tr></thead>
+                  <tbody id="ordersBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="chart-row">
+            <div class="panel chart-panel">
+              <div class="panel-head"><div><p class="eyebrow">Equity</p><h2>Curva simulada</h2></div><span class="select-like">30 dias</span></div>
+              <div class="line-chart" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+            </div>
+            <div class="panel chart-panel">
+              <div class="panel-head"><div><p class="eyebrow">P/L Diário</p><h2>Resultado por dia</h2></div><span class="select-like">30 dias</span></div>
+              <div class="bar-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+            </div>
+          </section>
+
+          <section class="panel log-panel">
+            <div class="panel-head">
+              <div><p class="eyebrow">Retorno técnico</p><h2>Logs e testes</h2></div>
+              <button class="mini-button" id="btnHealth">Testar API</button>
+            </div>
+            <pre id="outputBox">Aguardando ação...</pre>
+          </section>
+        </section>
+
+        <aside class="right-stack">
+          <section class="panel compact-panel">
+            <div class="panel-head"><h2>Watchlist</h2><button class="mini-button">⚙</button></div>
+            <div class="watchlist" id="watchlist"></div>
+          </section>
+
+          <section class="panel compact-panel market-card">
+            <p class="eyebrow">Regime de mercado</p>
+            <h2 id="marketRegimeTitle">Aguardando análise</h2>
+            <p id="marketRegimeText">Execute um scan para classificar tendência, range e volatilidade.</p>
+            <div class="wave"></div>
+          </section>
+
+          <section class="panel compact-panel risk-card">
+            <div class="risk-donut"><span id="riskDonutLabel">Baixo<br><small>Risco</small></span></div>
+            <div class="risk-list">
+              <div><span>Drawdown atual</span><b id="riskDD">-</b></div>
+              <div><span>Risco por trade</span><b id="riskTrade">-</b></div>
+              <div><span>Perda diária</span><b id="riskDaily">-</b></div>
+            </div>
+          </section>
+
+          <section class="panel compact-panel quick-panel">
+            <h2>Ações rápidas</h2>
+            <div class="quick-grid">
+              <button id="btnQuickRun">Run Scan</button>
+              <button id="btnQuickPause">Pausar</button>
+              <button id="btnQuickClose">Fechar todas</button>
+              <button id="btnQuickReport">Relatório</button>
+            </div>
+          </section>
+
+          <section class="panel compact-panel">
+            <div class="panel-head"><h2>Configuração</h2></div>
+            <pre id="configBox">Carregando...</pre>
+          </section>
+        </aside>
+      </div>
+
+      <footer class="footer-bar">
+        <span>Servidor: <b id="serverStatus">Online</b></span>
+        <span>Última atualização: <b id="lastUpdate">-</b></span>
+        <span>Timezone: America/Sao_Paulo</span>
+        <span>Dados via Supabase / Netlify Functions</span>
+      </footer>
+    </main>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

@@ -3,20 +3,22 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DF Forex Pro — Callback Deriv</title>
+  <meta name="theme-color" content="#06131c" />
+  <title>Conectando Deriv • DF Forex Pro</title>
+  <link rel="icon" type="image/png" href="/assets/df-logo.png" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
-<body>
-  <main class="callback-container">
-    <section class="panel">
-      <h1>Conectando conta Deriv</h1>
-      <p>Validando retorno oficial da Deriv. O DF Forex Pro não recebeu nem armazenou sua senha.</p>
-      <pre id="callbackOutput">Processando...</pre>
-      <div class="actions callback-actions">
-        <button id="btnGoHome">Voltar ao painel</button>
-        <button id="btnClear" class="secondary">Limpar conexão</button>
-      </div>
-    </section>
+<body class="callback-body">
+  <main class="callback-card">
+    <img src="/assets/df-logo.png" alt="DF Forex Pro" />
+    <p class="eyebrow">Login Deriv</p>
+    <h1>Conectando sua conta...</h1>
+    <p id="callbackOutput">Recebendo retorno seguro da Deriv. Você será levado automaticamente para o painel.</p>
+    <div class="callback-loader" aria-hidden="true"></div>
+    <div class="callback-actions">
+      <button id="btnGoHome" class="action-button">Voltar ao painel</button>
+      <button id="btnClear" class="ghost-action">Limpar conexão</button>
+    </div>
   </main>
   <script src="/deriv-callback.js" type="module"></script>
 </body>
