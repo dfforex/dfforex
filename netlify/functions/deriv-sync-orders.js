@@ -1,10 +1,11 @@
 import { json, safeError } from '../../lib/http.js';
 import { getSupabaseAdmin, insertLog } from '../../lib/supabaseAdmin.js';
-import { getRequestDerivToken } from '../../lib/derivAuth.js';
+import { getRequestDerivToken, getRequestDerivAppId } from '../../lib/derivAuth.js';
 import { syncDerivContract } from '../../lib/derivTrading.js';
 
 export async function handler(event) {
   const tokenInfo = getRequestDerivToken(event);
+  const derivAppId = getRequestDerivAppId(event);
   if (!tokenInfo.token) return json(401, { ok: false, error: 'Token Deriv ausente. Conecte a Deriv.' });
   const supabase = getSupabaseAdmin();
   if (!supabase) return json(400, { ok: false, error: 'Supabase não configurado no Netlify.' });

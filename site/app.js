@@ -34,6 +34,8 @@ const PAGE_META = {
   logs: ['Sistema', 'Logs técnicos', 'Retorno das chamadas e diagnóstico.']
 };
 
+const DEFAULT_DERIV_APP_ID = '1089';
+
 const DEFAULT_WATCHLIST = [
   { pair: 'EUR/USD', symbol: 'frxEURUSD', price: '1.08854', change: '+0.21%', dir: 'up' },
   { pair: 'GBP/USD', symbol: 'frxGBPUSD', price: '1.27231', change: '-0.12%', dir: 'down' },
@@ -79,7 +81,7 @@ bind('durationSelect', 'change', () => {
   localStorage.setItem(STORAGE.duration, el('durationSelect').value);
   updateDashboardSelection();
 });
-bind('derivAppIdInput', 'input', () => localStorage.setItem(STORAGE.derivAppId, el('derivAppIdInput').value.trim()));
+bind('derivAppIdInputOauth', 'input', () => localStorage.setItem(STORAGE.derivAppId, (el('derivAppIdInputOauth').value.trim() || '')));
 bind('btnSaveMt5', 'click', saveMt5Mode);
 bind('btnMt5Status', 'click', checkMt5Bridge);
 bind('btnMt5StatusBroker', 'click', checkMt5Bridge);
@@ -128,9 +130,19 @@ function hasDerivAuth() {
 function getDerivLoginId() { return sessionStorage.getItem(STORAGE.loginid) || ''; }
 function getDerivCurrency() { return sessionStorage.getItem(STORAGE.currency) || ''; }
 function inferAccountMode(loginid = '') { return /^VRTC/i.test(String(loginid || '')) ? 'demo' : 'real'; }
+function getDerivAppId() {
+  return (el('derivAppIdInputOauth')?.value || localStorage.getItem(STORAGE.derivAppId) || DEFAULT_DERIV_APP_ID).trim() || DEFAULT_DERIV_APP_ID;
+}
+function humanError(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (value.message) return value.message;
+  try { return JSON.stringify(value); } catch { return String(value); }
+}
 function authHeaders(extra = {}) {
   const token = getDerivToken();
-  return token ? { ...extra, Authorization: `Bearer ${token}` } : extra;
+  const headers = { ...extra, 'X-Deriv-App-Id': getDerivAppId() };
+  return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
 }
 
 function restoreFormState() {
@@ -138,7 +150,7 @@ function restoreFormState() {
   if (el('accountModeSelect')) el('accountModeSelect').value = mode;
   if (el('stakeInput')) el('stakeInput').value = localStorage.getItem(STORAGE.stake) || el('stakeInput').value || '1';
   if (el('durationSelect')) el('durationSelect').value = localStorage.getItem(STORAGE.duration) || el('durationSelect').value || '5';
-  if (el('derivAppIdInput')) el('derivAppIdInput').value = localStorage.getItem(STORAGE.derivAppId) || '';
+  if (el('derivAppIdInputOauth')) el('derivAppIdInputOauth').value = localStorage.getItem(STORAGE.derivAppId) || '';
   if (el('mt5ServerInput')) el('mt5ServerInput').value = localStorage.getItem(STORAGE.mt5Server) || '';
   if (el('mt5LoginInput')) el('mt5LoginInput').value = localStorage.getItem(STORAGE.mt5Login) || '';
   renderAccountOptions();
@@ -237,6 +249,8 @@ async function checkMt5Bridge() {
 async function connectWithDerivToken() {
   showPage('operacao');
   const token = (el('derivTokenInput')?.value || '').trim();
+  const appId = getDerivAppId();
+  localStorage.setItem(STORAGE.derivAppId, appId);
   if (!token) {
     showToast('Cole o token da Deriv antes de conectar.');
     setSetupWarning('Crie um token na Deriv com escopo Read para teste e Trade para operar. Depois cole aqui e clique em Conectar com token.');
@@ -244,12 +258,22 @@ async function connectWithDerivToken() {
   }
   sessionStorage.setItem(STORAGE.token, token);
   sessionStorage.setItem(STORAGE.tokenSource, 'browser_deriv_token');
-  showOutput('Validando token na Deriv...');
-  const data = await testDeriv();
+  showOutput(`Validando token na Deriv com App ID ${appId}...`);
+  let data = await testDeriv();
+
+  // Fallback: se a função Netlify falhar no WebSocket, testa direto no navegador.
+  if (!data?.authorized) {
+    showOutput('Backend não validou. Tentando validação direta no navegador...');
+    const browserData = await testDerivInBrowser(token, appId);
+    if (browserData?.authorized) data = browserData;
+    else data = data || browserData;
+  }
+
   if (!data?.authorized || !data.loginid) {
     sessionStorage.removeItem(STORAGE.token);
     sessionStorage.removeItem(STORAGE.tokenSource);
-    setSetupWarning(data?.error || 'Token não autorizado pela Deriv. Verifique se copiou corretamente e se possui escopo Read.');
+    const msg = humanError(data?.error) || data?.hint || 'Token não autorizado pela Deriv. Verifique se copiou corretamente, se possui escopo Read e se o App ID está válido.';
+    setSetupWarning(`${msg} | App ID usado: ${appId}`);
     return;
   }
   const account = { acct: data.loginid, token, currency: data.currency || 'USD', mode: inferAccountMode(data.loginid) };
@@ -287,8 +311,15 @@ async function loginWithDeriv() {
   showOutput('Gerando URL oficial de login da Deriv...');
   sessionStorage.setItem(STORAGE.returnTo, '/#operacao');
   try {
-    const appId = (el('derivAppIdInput')?.value || localStorage.getItem(STORAGE.derivAppId) || '').trim();
-    const loginUrl = appId ? `/api/deriv-oauth-url?app_id=${encodeURIComponent(appId)}` : '/api/deriv-oauth-url';
+    const appId = (el('derivAppIdInputOauth')?.value || localStorage.getItem(STORAGE.derivAppId) || '').trim();
+    if (!appId) {
+      const hint = 'Informe o App ID real criado no Deriv Application Manager ou configure DERIV_LEGACY_APP_ID no Netlify. O login OAuth não funciona com Client/App ID ausente.';
+      setSetupWarning(hint);
+      showOutput(hint);
+      showToast('App ID Deriv obrigatório para login OAuth.');
+      return;
+    }
+    const loginUrl = `/api/deriv-oauth-url?app_id=${encodeURIComponent(appId)}`;
     const res = await fetch(loginUrl, { cache: 'no-store' });
     const data = await res.json();
     if (!data.ok || !data.authorize_url) {
@@ -316,7 +347,7 @@ async function loginWithDeriv() {
 function setSetupWarning(message) {
   const box = el('derivSetupWarning');
   if (!box) return;
-  box.textContent = message || '';
+  box.textContent = humanError(message) || '';
   box.style.display = message ? 'block' : 'none';
 }
 function logoutDeriv() {
@@ -334,7 +365,14 @@ function logoutDeriv() {
   loadDashboard();
 }
 async function testDeriv() {
-  const data = await callApi('/api/deriv-test');
+  let data = await callApi('/api/deriv-test');
+  if (!data?.authorized && getDerivToken()) {
+    const browserData = await testDerivInBrowser(getDerivToken(), getDerivAppId());
+    if (browserData?.authorized) {
+      data = browserData;
+      showOutput(JSON.stringify({ ...browserData, note: 'Validado direto pelo navegador porque a função Netlify falhou.' }, null, 2));
+    }
+  }
   if (data?.authorized && data.loginid) {
     showToast(`Deriv conectada: ${data.loginid}`);
     sessionStorage.setItem(STORAGE.loginid, data.loginid);
@@ -343,12 +381,15 @@ async function testDeriv() {
     const mode = inferAccountMode(data.loginid);
     localStorage.setItem(STORAGE.accountMode, mode);
     if (el('accountModeSelect')) el('accountModeSelect').value = mode;
-    const account = { acct: data.loginid, currency: data.currency || 'USD', mode };
-    sessionStorage.setItem(STORAGE.accounts, JSON.stringify([account]));
+    const account = { acct: data.loginid, currency: data.currency || 'USD', mode, token: getDerivToken() };
+    sessionStorage.setItem(STORAGE.accounts, JSON.stringify([{ acct: account.acct, currency: account.currency, mode: account.mode }]));
     sessionStorage.setItem(STORAGE.accountsFull, JSON.stringify([account]));
     renderAccountOptions();
     updateDerivLoginStatus();
     updateDashboardSelection();
+    setSetupWarning('');
+  } else if (data?.error || data?.hint) {
+    setSetupWarning(`${humanError(data.error) || data.hint} | App ID usado: ${getDerivAppId()}`);
   }
   return data;
 }
@@ -369,7 +410,8 @@ function buildRunPayload(execute) {
     stake: Number(el('stakeInput')?.value || localStorage.getItem(STORAGE.stake) || 1),
     duration: Number(el('durationSelect')?.value || localStorage.getItem(STORAGE.duration) || 5),
     durationUnit: 'm',
-    maxTradesPerRun: 1
+    maxTradesPerRun: 1,
+    derivAppId: getDerivAppId()
   };
 }
 function startOperations() {
@@ -411,6 +453,65 @@ async function syncOrders({ silent = false } = {}) {
   return data;
 }
 
+function derivBrowserRequest(ws, payload, timeoutMs = 12000) {
+  return new Promise((resolve, reject) => {
+    const reqId = Math.floor(Math.random() * 1e9);
+    const timer = setTimeout(() => reject(new Error(`Timeout Deriv API para ${JSON.stringify(payload)}`)), timeoutMs);
+    const onMessage = (event) => {
+      let data;
+      try { data = JSON.parse(event.data); } catch { return; }
+      if (data.req_id !== reqId) return;
+      clearTimeout(timer);
+      ws.removeEventListener('message', onMessage);
+      if (data.error) reject(new Error(data.error.message || 'Erro Deriv API'));
+      else resolve(data);
+    };
+    ws.addEventListener('message', onMessage);
+    ws.send(JSON.stringify({ ...payload, req_id: reqId }));
+  });
+}
+
+async function testDerivInBrowser(token, appId = DEFAULT_DERIV_APP_ID) {
+  return new Promise((resolve) => {
+    const finalAppId = String(appId || DEFAULT_DERIV_APP_ID).trim() || DEFAULT_DERIV_APP_ID;
+    const ws = new WebSocket(`wss://ws.derivws.com/websockets/v3?app_id=${encodeURIComponent(finalAppId)}`);
+    const timeout = setTimeout(() => {
+      try { ws.close(); } catch {}
+      resolve({ ok: false, error: `Timeout ao conectar direto na Deriv com App ID ${finalAppId}` });
+    }, 15000);
+    ws.addEventListener('open', async () => {
+      try {
+        const ping = await derivBrowserRequest(ws, { ping: 1 });
+        const auth = await derivBrowserRequest(ws, { authorize: token }, 15000);
+        const balance = await derivBrowserRequest(ws, { balance: 1 }, 15000);
+        const activeSymbols = await derivBrowserRequest(ws, { active_symbols: 'brief', product_type: 'basic' }, 20000);
+        clearTimeout(timeout);
+        try { ws.close(); } catch {}
+        resolve({
+          ok: true,
+          authorized: Boolean(auth?.authorize),
+          loginid: auth?.authorize?.loginid || null,
+          fullname: auth?.authorize?.fullname || null,
+          currency: balance?.balance?.currency || auth?.authorize?.currency || null,
+          balance: balance?.balance?.balance || null,
+          ping,
+          app_id_used: finalAppId,
+          token_source: 'browser_direct_websocket',
+          sampleSymbols: (activeSymbols.active_symbols || []).slice(0, 12).map((s) => ({ symbol: s.symbol, display_name: s.display_name, market: s.market }))
+        });
+      } catch (err) {
+        clearTimeout(timeout);
+        try { ws.close(); } catch {}
+        resolve({ ok: false, error: err.message || String(err), app_id_used: finalAppId });
+      }
+    });
+    ws.addEventListener('error', () => {
+      clearTimeout(timeout);
+      resolve({ ok: false, error: `Falha no WebSocket direto da Deriv. Verifique App ID ${finalAppId}.`, app_id_used: finalAppId });
+    });
+  });
+}
+
 async function callApi(url, options = {}) {
   const method = options.method || 'GET';
   showOutput(`${method} ${url}...`);
@@ -418,10 +519,16 @@ async function callApi(url, options = {}) {
     const headers = authHeaders({ ...(options.headers || {}) });
     if (method !== 'GET' && !headers['Content-Type']) headers['Content-Type'] = 'application/json';
     const res = await fetch(url, { cache: 'no-store', ...options, method, headers });
-    const data = await res.json();
+    let data = null;
+    const text = await res.text();
+    try { data = text ? JSON.parse(text) : {}; } catch { data = { ok: false, error: text || `HTTP ${res.status}` }; }
     showOutput(JSON.stringify(data, null, 2));
-    if (!res.ok || data.ok === false) showToast(data.error?.message || data.error || 'A chamada retornou alerta.');
-    else showToast('Chamada executada com sucesso.');
+    if (!res.ok || data.ok === false) {
+      const msg = humanError(data.error) || data.hint || `HTTP ${res.status}`;
+      showToast(msg);
+    } else {
+      showToast('Chamada executada com sucesso.');
+    }
     return data;
   } catch (err) {
     showOutput(`Erro: ${err.message}`);

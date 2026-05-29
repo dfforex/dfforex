@@ -1,7 +1,7 @@
 import { json, safeError } from '../../lib/http.js';
 import { getConfig, executionIsHardBlocked } from '../../lib/config.js';
 import { getCandles } from '../../lib/derivClient.js';
-import { getRequestDerivToken } from '../../lib/derivAuth.js';
+import { getRequestDerivToken, getRequestDerivAppId } from '../../lib/derivAuth.js';
 import { getAuthorizedDerivAccount, buyRiseFallContract } from '../../lib/derivTrading.js';
 import { trendPullbackSignal } from '../../lib/strategyTrendPullback.js';
 import { evaluateRisk } from '../../lib/riskEngine.js';
@@ -33,11 +33,12 @@ export async function handler(event) {
   const maxTradesPerRun = Math.max(1, Number(body.maxTradesPerRun || process.env.MAX_TRADES_PER_RUN || 1));
   const supabase = getSupabaseAdmin();
   const tokenInfo = getRequestDerivToken(event);
+  const derivAppId = getRequestDerivAppId(event);
 
   try {
     let account = null;
     if (tokenInfo.token) {
-      account = await getAuthorizedDerivAccount(tokenInfo.token);
+      account = await getAuthorizedDerivAccount(tokenInfo.token, derivAppId);
       if (requestedMode && account.account_mode !== requestedMode) {
         return json(400, {
           ok: false,
@@ -60,7 +61,7 @@ export async function handler(event) {
     let executedCount = 0;
 
     for (const symbol of cfg.symbols) {
-      const candles = await getCandles(symbol, granularitySeconds, 240);
+      const candles = await getCandles(symbol, granularitySeconds, 240, derivAppId);
       const signal = trendPullbackSignal(candles, symbol, cfg);
       const risk = evaluateRisk(signal, { dailyLossPct: 0, weeklyLossPct: 0, monthlyDrawdownPct: 0 }, cfg);
       let signalId = null;
@@ -105,7 +106,8 @@ export async function handler(event) {
             stake,
             duration,
             durationUnit,
-            currency: account?.currency || 'USD'
+            currency: account?.currency || 'USD',
+            appId: derivAppId
           });
           order = {
             account_id: null,
@@ -173,6 +175,7 @@ export async function handler(event) {
       execution_requested: executeRequested,
       execution_enabled: canSendOrders,
       block_reasons: localBlockReasons,
+      app_id_used: derivAppId,
       account: account ? { loginid: account.loginid, account_mode: account.account_mode, currency: account.currency, balance: account.balance } : null,
       stake,
       duration,

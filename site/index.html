@@ -39,7 +39,7 @@
 
       <div class="version-card">
         <span>DF Forex Pro</span>
-        <strong>v2.7</strong>
+        <strong>v2.8</strong>
         <button id="btnSidebarRefresh">Atualizar dados</button>
       </div>
     </aside>
@@ -134,11 +134,11 @@
             </div>
 
             <div class="connect-method" data-connect-panel="oauth">
-              <label class="full-label">App ID Deriv opcional
-                <input id="derivAppIdInput" type="text" placeholder="Ex.: seu App ID da Deriv" autocomplete="off" />
+              <label class="full-label">App ID Deriv obrigatório para login
+                <input id="derivAppIdInputOauth" type="text" placeholder="Cole o App ID criado em api.deriv.com" autocomplete="off" />
               </label>
               <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Conectar Deriv via login</b></button>
-              <p class="form-note">Se aparecer <b>invalid_client</b>, o App ID está ausente/incorreto ou o Redirect URL não está cadastrado.</p>
+              <p class="form-note">O login oficial exige um App ID real criado no Deriv Application Manager. Configure o Website/OAuth Redirect URL como https://df-forex.netlify.app/deriv-callback.html.</p>
             </div>
 
             <div class="connect-method" data-connect-panel="mt5">
