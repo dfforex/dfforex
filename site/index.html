@@ -3,287 +3,126 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#06131c" />
   <title>DF Forex Pro</title>
-  <link rel="icon" type="image/png" href="/assets/df-logo.png" />
+  <link rel="icon" href="/assets/df-logo.png" />
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <div class="app-shell">
+  <div id="app" class="app-shell">
     <aside class="sidebar">
-      <div class="brand-block">
-        <img src="/assets/df-logo.png" alt="DF Forex Pro" class="brand-logo" />
-        <div>
-          <strong>DF Forex Pro</strong>
-          <span>Automação Forex</span>
-        </div>
+      <div class="brand">
+        <img src="/assets/df-logo.png" alt="DF" class="brand-logo" />
+        <div><strong>DF Forex Pro</strong><span>MT5 Bridge</span></div>
       </div>
-
-      <nav class="side-nav" aria-label="Menu principal">
-        <button class="nav-item active" data-page="dashboard"><span>▦</span>Dashboard</button>
-        <button class="nav-item" data-page="operacao"><span>▶</span>Operação</button>
-        <button class="nav-item" data-page="signals"><span>⇄</span>Sinais</button>
-        <button class="nav-item" data-page="orders"><span>◫</span>Ordens</button>
-        <button class="nav-item" data-page="risk"><span>◇</span>Risco</button>
-        <button class="nav-item" data-page="strategies"><span>◎</span>Estratégias</button>
-        <button class="nav-item" data-page="performance"><span>▥</span>Performance</button>
-        <button class="nav-item" data-page="broker"><span>⚡</span>Corretora</button>
-        <button class="nav-item" data-page="logs"><span>⌘</span>Logs</button>
+      <nav class="nav">
+        <button class="nav-btn active" data-tab="dashboard">Dashboard</button>
+        <button class="nav-btn" data-tab="operacao">Operação</button>
+        <button class="nav-btn" data-tab="mt5">Configuração MT5</button>
+        <button class="nav-btn" data-tab="sinais">Sinais</button>
+        <button class="nav-btn" data-tab="ordens">Ordens</button>
+        <button class="nav-btn" data-tab="risco">Risco</button>
+        <button class="nav-btn" data-tab="estrategias">Estratégias</button>
+        <button class="nav-btn" data-tab="logs">Logs</button>
       </nav>
-
-      <div class="integration-box">
-        <small>INTEGRAÇÕES</small>
-        <div class="integration-line"><span class="dot" id="dotSupabase"></span> Supabase</div>
-        <div class="integration-line"><span class="dot" id="dotDeriv"></span> Deriv API</div>
+      <div class="sidebar-card">
+        <span>Integração principal</span>
+        <strong>MetaTrader 5</strong>
+        <small>Deriv-Demo / Deriv-Server</small>
       </div>
-
-      <div class="version-card">
-        <span>DF Forex Pro</span>
-        <strong>v2.9</strong>
-        <button id="btnSidebarRefresh">Atualizar dados</button>
+      <div class="sidebar-card muted">
+        <span>Versão</span>
+        <strong>v3.1</strong>
+        <small>Netlify + Supabase + EA</small>
       </div>
     </aside>
 
-    <main class="main-area">
+    <main class="main">
       <header class="topbar">
         <div>
-          <p class="eyebrow" id="pageEyebrow">Painel principal</p>
-          <h1 id="pageTitle">Dashboard operacional</h1>
-          <span class="subtitle" id="pageSubtitle">Visão geral do robô, conexão Deriv, risco e performance.</span>
+          <h1>DF Forex Pro</h1>
+          <p>Execução profissional via MetaTrader 5 Bridge.</p>
         </div>
         <div class="top-actions">
-          <div class="status-pill" id="supabasePill"><span class="dot"></span><div><b>Supabase</b><small>Verificando</small></div></div>
-          <div class="status-pill" id="derivPill"><span class="dot"></span><div><b>Deriv API</b><small>Não conectado</small></div></div>
-          <button class="icon-button" id="btnTheme" title="Alternar visual">◐</button>
-          <div class="user-chip"><span>DF</span><div><b>Trader</b><small>Administrador</small></div></div>
+          <span id="serverStatus" class="pill neutral">Carregando...</span>
+          <button id="refreshBtn" class="btn secondary">Atualizar</button>
         </div>
       </header>
 
-      <section class="hero-card page-section active" data-view="dashboard">
-        <div class="mode-block">
-          <div class="bot-icon">🤖</div>
-          <div>
-            <span class="tag">MODO ATIVO</span>
-            <h2 id="modeTitle">DEMO / DRY RUN</h2>
-            <p id="modeDescription">Conecte a Deriv, selecione Demo ou Real e inicie as estratégias na aba Operação.</p>
+      <section class="hero-grid">
+        <article class="hero-card mode-card">
+          <div class="icon-card">🤖</div>
+          <div><span>Modo ativo</span><strong id="modeText">Demo / Dry Run</strong><small id="modeHint">Sem ordem real até liberar travas.</small></div>
+        </article>
+        <article class="kpi"><span>MT5 Bridge</span><strong id="bridgeStatus">Offline</strong><small id="bridgeSub">Aguardando EA</small></article>
+        <article class="kpi"><span>Equity</span><strong id="equityKpi">-</strong><small>USD</small></article>
+        <article class="kpi"><span>Saldo</span><strong id="balanceKpi">-</strong><small>Conta selecionada</small></article>
+        <article class="kpi"><span>Posições abertas</span><strong id="positionsKpi">-</strong><small id="tradeAllowedKpi">Trade: -</small></article>
+        <article class="kpi"><span>Risco</span><strong id="riskKpi">Seguro</strong><small>Travas ativas</small></article>
+      </section>
+
+      <section id="tab-dashboard" class="tab-panel active">
+        <div class="section-head"><h2>Dashboard</h2><p>Resumo limpo da conta, robô e últimas operações.</p></div>
+        <div class="grid two">
+          <div class="card"><h3>Últimas entradas</h3><div class="table-wrap"><table><thead><tr><th>Data</th><th>Par</th><th>Direção</th><th>Status</th><th>P/L</th></tr></thead><tbody id="ordersMini"></tbody></table></div></div>
+          <div class="card"><h3>Últimos sinais</h3><div class="table-wrap"><table><thead><tr><th>Data</th><th>Par</th><th>Estratégia</th><th>Score</th><th>Status</th></tr></thead><tbody id="signalsMini"></tbody></table></div></div>
+        </div>
+      </section>
+
+      <section id="tab-operacao" class="tab-panel">
+        <div class="section-head"><h2>Operação</h2><p>Inicie, pause ou sincronize o robô. A execução acontece pelo EA no MetaTrader 5.</p></div>
+        <div class="grid three">
+          <div class="card action-card"><h3>Conta operacional</h3>
+            <label>Ambiente</label>
+            <select id="accountType"><option value="demo">Conta Demo</option><option value="real">Conta Real</option></select>
+            <small class="warning">Conta real só opera se ALLOW_LIVE_TRADING e MT5_ALLOW_REAL_TRADING estiverem liberados no Netlify e no EA.</small>
           </div>
-        </div>
-        <div class="hero-metrics">
-          <div><span>Broker</span><strong id="metricBroker">-</strong><small id="metricBrokerStatus">Aguardando</small></div>
-          <div><span>Equity</span><strong id="metricEquity">-</strong><small>USD</small></div>
-          <div><span>P/L diário</span><strong id="metricPL">-</strong><small class="positive">Monitorado</small></div>
-          <div><span>Drawdown</span><strong id="metricDrawdown">-</strong><small>Trava ativa</small></div>
-          <div><span>Risco</span><strong id="metricRisk">Seguro</strong><small>Baixo</small></div>
-          <div><span>Status do Bot</span><strong id="metricBotStatus">Pausado</strong><small id="metricBotSince">Aguardando scan</small></div>
-        </div>
-      </section>
-
-      <section class="connection-strip page-section active" data-view="dashboard">
-        <div class="connect-summary" id="connectSummary">
-          <div>
-            <span class="tag">CONEXÃO DERIV</span>
-            <h2 id="connectSummaryTitle">Deriv não conectada</h2>
-            <p id="connectSummaryText">Acesse a aba Operação para conectar a conta e iniciar os scans.</p>
+          <div class="card action-card"><h3>Parâmetros</h3>
+            <label>Risco por trade (%)</label><input id="riskPct" type="number" min="0.01" step="0.01" value="0.50" />
+            <label>Lote fixo inicial</label><input id="fixedLot" type="number" min="0.01" step="0.01" value="0.01" />
           </div>
-          <button class="primary-action" id="btnTopDerivLogin">Conectar Deriv</button>
-        </div>
-        <div class="quick-status">
-          <div><span>Conta selecionada</span><strong id="dashSelectedAccount">-</strong></div>
-          <div><span>Ambiente</span><strong id="dashAccountMode">DEMO</strong></div>
-          <div><span>Stake</span><strong id="dashStake">$1.00</strong></div>
-          <div><span>Duração</span><strong id="dashDuration">5m</strong></div>
-        </div>
-      </section>
-
-      <section class="page-section active" data-view="dashboard">
-        <section class="kpi-grid" id="cards"></section>
-        <div class="dashboard-grid">
-          <section class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Resumo</p><h2>Últimas entradas</h2></div><button class="mini-button go-page" data-go="orders">Ver ordens</button></div>
-            <div class="table-wrap small-table"><table><thead><tr><th>Data</th><th>Par</th><th>Direção</th><th>Status</th><th>P/L</th></tr></thead><tbody id="ordersPreviewBody"></tbody></table></div>
-          </section>
-          <section class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Mercado</p><h2>Watchlist</h2></div><button class="mini-button">⚙</button></div>
-            <div class="watchlist" id="watchlist"></div>
-          </section>
-        </div>
-      </section>
-
-      <section class="page-section" data-view="operacao">
-        <div class="operation-console" id="operationConsole">
-          <div class="operation-card connect-card" id="connectCard">
-            <span class="tag">1. CONEXÃO</span>
-            <h2 id="connectTitle">Conectar Deriv</h2>
-            <p id="connectText">Entre pela tela oficial da Deriv usando e-mail/senha. O DF Forex Pro não recebe sua senha; a Deriv retorna a autorização automaticamente para o painel.</p>
-
-            <div class="login-only-card">
-              <label class="full-label">App ID Deriv
-                <input id="derivAppIdInputOauth" type="text" placeholder="App ID criado no Application Manager da Deriv" autocomplete="off" />
-              </label>
-              <div class="start-actions wrap-actions">
-                <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Entrar com Deriv</b></button>
-                <a class="ghost-link" href="https://api.deriv.com/dashboard/applications" target="_blank" rel="noopener">Criar/App ID na Deriv</a>
-              </div>
-              <p class="form-note">No app da Deriv, o Website/OAuth Redirect URL precisa ser exatamente <b>https://df-forex.netlify.app/deriv-callback.html</b>. Após o login, a Deriv volta para este painel com as contas autorizadas.</p>
+          <div class="card action-card"><h3>Bot</h3>
+            <div class="button-row vertical">
+              <button id="startBtn" class="btn success">▶ Iniciar operações</button>
+              <button id="scanBtn" class="btn secondary">⟳ Scan único</button>
+              <button id="pauseBtn" class="btn warn">Ⅱ Pausar bot</button>
+              <button id="closeAllBtn" class="btn danger">Fechar todas</button>
             </div>
-
-            <details class="mt5-details">
-              <summary>Usar Deriv MT5/CFD via Bridge</summary>
-              <div class="connect-method active" data-connect-panel="mt5">
-              <div class="mt5-info-card">
-                <b>Conta Deriv MT5 detectada</b>
-                <span>Use este modo para Forex/CFD com MetaTrader 5, lote, stop loss e take profit.</span>
-              </div>
-              <div class="form-grid">
-                <label>Servidor MT5
-                  <input id="mt5ServerInput" type="text" placeholder="Ex.: Deriv-Demo" autocomplete="off" />
-                </label>
-                <label>Login ID MT5
-                  <input id="mt5LoginInput" type="text" placeholder="Ex.: 32243508" autocomplete="off" />
-                </label>
-              </div>
-              <div class="start-actions wrap-actions">
-                <button class="primary-action" id="btnSaveMt5"><span>✓</span><b>Salvar modo MT5</b></button>
-                <button class="action-button" id="btnMt5Status"><span>↔</span>Testar Bridge MT5</button>
-              </div>
-              <p class="form-note">O Web Terminal da Deriv mostra o login, mas não roda Expert Advisor. Para operar automaticamente em MT5, instale o MT5 desktop/VPS e o arquivo <b>mt5/DF_Forex_Pro_Bridge.mq5</b>.</p>
-              </div>
-            </details>
-
-            <button class="ghost-action compact" id="btnDerivLogout">Sair / Trocar conta</button>
-            <div class="setup-warning" id="derivSetupWarning"></div>
-          </div>
-
-          <div class="operation-card">
-            <span class="tag">2. CONTA OPERACIONAL</span>
-            <h2>Selecionar conta</h2>
-            <div class="form-grid">
-              <label>Ambiente
-                <select id="accountModeSelect"><option value="demo" selected>Conta Demo</option><option value="real">Conta Real</option></select>
-              </label>
-              <label>Conta Deriv
-                <select id="derivAccountSelect"><option value="">Conecte a Deriv</option></select>
-              </label>
-              <label>Stake por entrada
-                <input id="stakeInput" type="number" min="0.35" step="0.01" value="1" />
-              </label>
-              <label>Duração
-                <select id="durationSelect"><option value="3">3 minutos</option><option value="5" selected>5 minutos</option><option value="10">10 minutos</option><option value="15">15 minutos</option></select>
-              </label>
-            </div>
-            <p class="form-note" id="selectedAccountHint">Nenhuma conta selecionada.</p>
-          </div>
-
-          <div class="operation-card start-card">
-            <span class="tag">3. ESTRATÉGIAS</span>
-            <h2 id="botControlTitle">Bot pausado</h2>
-            <p id="botControlText">Clique para iniciar os scans automáticos e registrar entradas, resultados, ganhos e perdas.</p>
-            <div class="start-actions">
-              <button class="success-action" id="btnStartOperations"><span>▶</span>Iniciar operações</button>
-              <button class="warning-action" id="btnStopOperations"><span>Ⅱ</span>Pausar</button>
-              <button class="action-button" id="btnRun"><span>◉</span>Scan único</button>
-            </div>
-            <small id="botIntervalStatus">Intervalo: 60s • aguardando início</small>
-          </div>
-        </div>
-
-        <section class="action-row secondary-actions">
-          <button class="action-button" id="btnDeriv"><span>✓</span>Testar Deriv</button>
-          <button class="action-button" id="btnRefresh"><span>⟳</span>Atualizar painel</button>
-          <button class="mini-button" id="btnSyncOrders">Sincronizar resultados</button>
-          <button class="mini-button" id="btnHealth">Testar API</button>
-        </section>
-
-        <section class="notice" id="noticeBox"><strong>Segurança:</strong> Demo e Real são selecionados no painel, mas a execução real continua protegida por variáveis do Netlify. Para conta real, é obrigatório liberar as travas conscientemente.</section>
-      </section>
-
-      <section class="page-section" data-view="signals">
-        <div class="panel">
-          <div class="panel-head"><div><p class="eyebrow">Sinais</p><h2>Últimos sinais gerados pelas estratégias</h2></div><button class="mini-button" id="btnSignalsRefresh">Atualizar</button></div>
-          <div class="table-wrap"><table><thead><tr><th>Data/Hora</th><th>Par</th><th>Direção</th><th>Estratégia</th><th>Score</th><th>Status</th><th>Motivo</th></tr></thead><tbody id="signalsBody"></tbody></table></div>
-        </div>
-      </section>
-
-      <section class="page-section" data-view="orders">
-        <div class="panel">
-          <div class="panel-head"><div><p class="eyebrow">Ordens</p><h2>Entradas realizadas e resultados</h2></div><button class="mini-button" id="btnOrdersRefresh">Sincronizar</button></div>
-          <div class="table-wrap"><table><thead><tr><th>Data/Hora</th><th>Par</th><th>Direção</th><th>Stake</th><th>Status</th><th>Resultado</th><th>P/L</th></tr></thead><tbody id="ordersBody"></tbody></table></div>
-        </div>
-      </section>
-
-      <section class="page-section" data-view="risk">
-        <div class="dashboard-grid">
-          <div class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Risco</p><h2>Controles de risco</h2></div></div>
-            <div class="risk-card"><div class="risk-donut"><span id="riskDonutLabel">Baixo<br><small>Demo</small></span></div><div class="risk-list"><div><span>Drawdown atual</span><strong id="riskDD">0.00%</strong></div><div><span>Risco por trade</span><strong id="riskTrade">-</strong></div><div><span>Perda diária máxima</span><strong id="riskDaily">-</strong></div></div></div>
-          </div>
-          <div class="panel market-card"><p class="eyebrow">Regime de mercado</p><h2 id="marketRegimeTitle">Aguardando análise</h2><p id="marketRegimeText">Clique em Scan único ou Iniciar operações para coletar candles e classificar o mercado.</p><div class="wave"></div></div>
-        </div>
-      </section>
-
-      <section class="page-section" data-view="strategies">
-        <div class="panel strategy-panel">
-          <div class="panel-head"><div><p class="eyebrow">Estratégias</p><h2>Motores ativos</h2></div></div>
-          <div class="strategy-list">
-            <div><b>DF Trend Pullback Core</b><span>Ativa • tendência H1/H4 + score mínimo</span></div>
-            <div><b>London Breakout</b><span>Preparada • habilitação futura</span></div>
-            <div><b>Range Reversion</b><span>Preparada • habilitação futura</span></div>
+            <small id="commandResult" class="logline"></small>
           </div>
         </div>
       </section>
 
-      <section class="page-section" data-view="performance">
-        <section class="chart-row">
-          <div class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">Equity</p><h2>Curva operacional</h2></div><span class="select-like">30 dias</span></div><div class="line-chart" aria-hidden="true"></div></div>
-          <div class="panel chart-panel"><div class="panel-head"><div><p class="eyebrow">P/L diário</p><h2>Resultado por dia</h2></div><span class="select-like">30 dias</span></div><div class="bar-chart" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
-        </section>
-        <div class="dashboard-grid compact-grid">
-          <section class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Performance</p><h2>Indicadores</h2></div></div>
-            <div class="risk-list big-list"><div><span>Win rate</span><strong id="perfWinRate">-</strong></div><div><span>Profit factor</span><strong id="perfProfitFactor">-</strong></div><div><span>P/L total</span><strong id="perfPLTotal">-</strong></div></div>
-          </section>
-          <section class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Distribuição</p><h2>Sinais por direção</h2></div></div>
-            <div class="risk-card"><div class="risk-donut"><span>BUY/SELL<br><small id="perfSignalCount">-</small></span></div><div class="risk-list"><div><span>Compras</span><strong id="perfBuyCount">-</strong></div><div><span>Vendas</span><strong id="perfSellCount">-</strong></div></div></div>
-          </section>
-        </div>
-      </section>
-
-      <section class="page-section" data-view="broker">
-        <div class="dashboard-grid compact-grid">
-          <div class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Corretora</p><h2>Deriv API / Token</h2></div><button class="mini-button" id="btnBrokerTest">Testar conexão</button></div>
-            <p class="subtitle">Login oficial Deriv por OAuth. O painel recebe autorização da Deriv após o login, sem capturar senha.</p>
-            <pre id="configBox">Aguardando configuração...</pre>
+      <section id="tab-mt5" class="tab-panel">
+        <div class="section-head"><h2>Configuração MT5</h2><p>Use login, senha e servidor dentro do MetaTrader 5. O painel conversa com o EA Bridge via Supabase/Netlify.</p></div>
+        <div class="grid two">
+          <div class="card"><h3>Dados da conta</h3>
+            <label>Broker</label><input id="brokerName" value="Deriv MT5" />
+            <label>Servidor</label><input id="accountServer" value="Deriv-Demo" />
+            <label>Login ID</label><input id="accountLogin" placeholder="Ex: 32243508" />
+            <label>Senha</label><input id="accountPassword" type="password" placeholder="Digite somente no MetaTrader 5" disabled />
+            <small class="warning">A senha não é salva no painel. Faça login diretamente no MetaTrader 5: Arquivo > Abrir Conta / Login na conta de negociação.</small>
+            <button id="saveMt5Btn" class="btn primary">Salvar configuração visual</button>
           </div>
-          <div class="panel">
-            <div class="panel-head"><div><p class="eyebrow">Corretora</p><h2>Deriv MT5 Bridge</h2></div><button class="mini-button" id="btnMt5StatusBroker">Status Bridge</button></div>
-            <p class="subtitle">Modo recomendado para Forex/CFD tradicional. O painel envia comandos; o Expert Advisor no MT5 desktop/VPS executa e devolve resultados.</p>
-            <div class="risk-list big-list">
-              <div><span>Servidor MT5</span><strong id="brokerMt5Server">-</strong></div>
-              <div><span>Login MT5</span><strong id="brokerMt5Login">-</strong></div>
-              <div><span>Status Bridge</span><strong id="brokerMt5Status">Aguardando</strong></div>
-            </div>
+          <div class="card"><h3>Como conectar</h3>
+            <ol class="steps">
+              <li>Abra o MetaTrader 5 da Deriv.</li>
+              <li>Faça login com Login ID, senha e servidor.</li>
+              <li>Copie <code>mt5/DF_Forex_Pro_Bridge.mq5</code> para MQL5/Experts.</li>
+              <li>Adicione a URL do Netlify em Tools > Options > Expert Advisors > WebRequest.</li>
+              <li>Arraste o EA para um gráfico e configure Bridge ID/Secret.</li>
+              <li>Volte ao painel e clique em Iniciar operações.</li>
+            </ol>
           </div>
         </div>
       </section>
 
-      <section class="page-section" data-view="logs">
-        <div class="panel log-panel">
-          <div class="panel-head"><div><p class="eyebrow">Retorno técnico</p><h2>Logs e testes</h2></div></div>
-          <pre id="outputBox">Aguardando ação...</pre>
-        </div>
-      </section>
-
-      <footer class="footer-bar">
-        <span>Servidor: <b id="serverStatus">Verificando</b></span>
-        <span>Última atualização: <b id="lastUpdate">-</b></span>
-        <span>Timezone: America/Sao_Paulo (BRT)</span>
-        <span>Dados via Supabase / Deriv API</span>
-      </footer>
+      <section id="tab-sinais" class="tab-panel"><div class="section-head"><h2>Sinais</h2><p>Todos os sinais recebidos do EA/estratégia.</p></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Data</th><th>Par</th><th>Direção</th><th>Estratégia</th><th>Score</th><th>Status</th><th>Motivo</th></tr></thead><tbody id="signalsTable"></tbody></table></div></div></section>
+      <section id="tab-ordens" class="tab-panel"><div class="section-head"><h2>Ordens</h2><p>Entradas, ganho, perda e P/L reportados pelo MetaTrader 5.</p></div><div class="card"><div class="table-wrap"><table><thead><tr><th>Data</th><th>Ticket</th><th>Par</th><th>Direção</th><th>Lote</th><th>Status</th><th>Lucro</th><th>Fechamento</th></tr></thead><tbody id="ordersTable"></tbody></table></div></div></section>
+      <section id="tab-risco" class="tab-panel"><div class="section-head"><h2>Risco</h2><p>Limites operacionais e travas.</p></div><div class="grid three"><div class="card"><span>Risco por trade</span><strong id="riskTrade">0.50%</strong></div><div class="card"><span>Perda diária máxima</span><strong id="dailyLoss">2%</strong></div><div class="card"><span>Drawdown mensal máximo</span><strong id="monthlyDd">10%</strong></div></div></section>
+      <section id="tab-estrategias" class="tab-panel"><div class="section-head"><h2>Estratégias</h2><p>Motores disponíveis no Bridge.</p></div><div class="grid three"><div class="card"><h3>DF Trend Pullback Core</h3><p>EMA 50/200 + confirmação M15 + ATR + score mínimo.</p><span class="pill good">Ativa</span></div><div class="card"><h3>London Breakout</h3><p>Preparada para próxima fase.</p><span class="pill neutral">Preparada</span></div><div class="card"><h3>Range Reversion</h3><p>Preparada para mercado lateral.</p><span class="pill neutral">Preparada</span></div></div></section>
+      <section id="tab-logs" class="tab-panel"><div class="section-head"><h2>Logs</h2><p>Eventos técnicos do painel e da ponte MT5.</p></div><div class="card"><pre id="logsBox" class="logs"></pre></div></section>
     </main>
   </div>
-  <div class="toast" id="toast"></div>
   <script src="/app.js" type="module"></script>
 </body>
 </html>

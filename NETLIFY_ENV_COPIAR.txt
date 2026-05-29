@@ -1,0 +1,31 @@
+Copie estas variáveis no Netlify > Site configuration > Environment variables.
+ATENÇÃO: credenciais provisórias para teste. Não subir este arquivo ao GitHub.
+Depois de validar funcionamento, troque/rotacione as chaves no Supabase e atualize no Netlify.
+
+PUBLIC_SITE_URL=https://df-forex.netlify.app
+
+SUPABASE_URL=https://zczrbjcskfjflehrjch.supabase.co
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjenJiamNzZmtsamZsZWhyamNoIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDAyNzI4MywiZXhwIjoyMDk1NjAzMjgzfQ.tytMRADPb8RDlStweZF2izlE4X3sVdhmBooemcwjZkA
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpjenJiamNzZmtsamZsZWhyamNoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAwMjcyODMsImV4cCI6MjA5NTYwMzI4M30.vVwzq0H0XtRviHiJrmSAPFQHDnPYj-sjMBRAvGLRhRc
+
+BROKER_CONNECTOR=mt5_bridge
+MT5_BRIDGE_ID=df-forex-main
+MT5_BRIDGE_SECRET=df_forex_bridge_teste_2026_05_29_trocar_depois
+MT5_BROKER_NAME=Deriv MT5
+MT5_SERVER=Deriv-Demo
+MT5_LOGIN=32243508
+MT5_ALLOW_REAL_TRADING=false
+
+BOT_MODE=dry_run
+ACCOUNT_TYPE=demo
+ENABLE_ORDER_EXECUTION=false
+ALLOW_LIVE_TRADING=false
+
+FOREX_SYMBOLS=EURUSD,GBPUSD,USDJPY,XAUUSD
+MAX_RISK_PER_TRADE_PCT=0.5
+MAX_DAILY_LOSS_PCT=2
+MAX_WEEKLY_LOSS_PCT=5
+MAX_MONTHLY_DRAWDOWN_PCT=10
+MIN_SIGNAL_SCORE=80
+MAX_TRADES_PER_DAY=5
+MAX_OPEN_POSITIONS=2

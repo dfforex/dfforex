@@ -372,3 +372,6 @@ values
 on conflict(key) do update set value = excluded.value, description = excluded.description, updated_at = now();
 
 commit;
+
+
+-- Include MT5 Bridge migration from supabase/mt5_bridge_schema.sql when applying v3.1.

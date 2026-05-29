@@ -1,0 +1,15 @@
+DF Forex Pro v3.1
+
+Correção aplicada:
+- Integração principal agora é MetaTrader 5 Bridge.
+- Login/senha/servidor devem ser usados no MetaTrader 5, não no painel web.
+- Painel envia comandos ao EA por Supabase/Netlify.
+- EA executa estratégia e reporta sinais/ordens/ganho/perda.
+- Painel separado por abas internas.
+- Deriv OAuth/token deixa de ser fluxo principal.
+
+Próximo passo:
+1. Subir arquivos ao GitHub.
+2. Rodar supabase/mt5_bridge_schema.sql.
+3. Configurar variáveis Netlify.
+4. Instalar mt5/DF_Forex_Pro_Bridge.mq5 no MetaTrader 5.

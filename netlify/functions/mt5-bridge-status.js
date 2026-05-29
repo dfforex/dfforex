@@ -1,30 +1,18 @@
-import { json } from '../../lib/http.js';
-import { getSupabaseAdmin } from '../../lib/supabaseAdmin.js';
+import { json, options } from '../../lib/http.js';
+import { getConfig } from '../../lib/config.js';
+import { requireSupabase } from '../../lib/mt5Bridge.js';
 
 export async function handler(event) {
-  const params = event.queryStringParameters || {};
-  const login = params.login || '';
-  const server = params.server || '';
-  const supabase = getSupabaseAdmin();
-  if (!supabase) {
-    return json(200, { ok: true, connected: false, reason: 'Supabase não configurado', login, server });
+  if (event.httpMethod === 'OPTIONS') return options();
+  try {
+    const cfg = getConfig();
+    const bridgeId = event.queryStringParameters?.bridge_id || cfg.mt5.bridgeId;
+    const supabase = requireSupabase();
+    const { data, error } = await supabase.from('mt5_bridge_status').select('*').eq('bridge_id', bridgeId).maybeSingle();
+    if (error) return json(500, { ok: false, error: error.message });
+    const ageSec = data?.last_seen_at ? Math.round((Date.now() - new Date(data.last_seen_at).getTime()) / 1000) : null;
+    return json(200, { ok: true, bridge_id: bridgeId, connected: Boolean(data && ageSec !== null && ageSec <= cfg.mt5.heartbeatMaxAgeSeconds), age_seconds: ageSec, status: data || null });
+  } catch (err) {
+    return json(500, { ok: false, error: err.message });
   }
-  const { data, error } = await supabase
-    .from('bot_runtime_logs')
-    .select('created_at, payload')
-    .eq('level', 'mt5_heartbeat')
-    .order('created_at', { ascending: false })
-    .limit(1);
-  if (error) return json(200, { ok: false, connected: false, error: error.message, login, server });
-  const last = data?.[0];
-  const ageSec = last ? Math.round((Date.now() - new Date(last.created_at).getTime()) / 1000) : null;
-  return json(200, {
-    ok: true,
-    connected: Boolean(last && ageSec !== null && ageSec <= 120),
-    last_heartbeat: last?.created_at || null,
-    age_seconds: ageSec,
-    login,
-    server,
-    payload: last?.payload || null
-  });
 }

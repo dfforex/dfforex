@@ -1,112 +1,53 @@
-# DF Forex Pro v2.9 — Netlify + Deriv PAT + Supabase + MT5 Bridge
+# DF Forex Pro v3.1 — MT5 Bridge Principal
 
-Painel operacional para automação Forex/Deriv com:
+Versão corrigida para operar via MetaTrader 5/Deriv MT5, usando login, senha e servidor diretamente no terminal MT5.
 
-- layout premium separado por abas internas;
-- conexão por **Token API Deriv / PAT**;
-- conexão OAuth mantida como alternativa;
-- seleção de Conta Demo ou Conta Real;
-- botão **Iniciar operações**;
-- execução de scans automáticos enquanto a aba está aberta;
-- registro de sinais e entradas no Supabase;
-- sincronização de contratos abertos para mostrar ganho/perda;
-- travas de segurança para impedir operação real acidental;
-- opção **Deriv MT5 Bridge** para Forex/CFD tradicional via MetaTrader 5.
+## O que mudou
 
-## Site
+- Removido OAuth Deriv como fluxo principal.
+- Painel reorganizado por abas internas.
+- Nova aba **Configuração MT5**.
+- Novo EA `mt5/DF_Forex_Pro_Bridge.mq5`.
+- Comandos via Netlify Functions + Supabase.
+- Sinais, ordens, ganho/perda e logs reportados pelo MT5 Bridge.
+
+## Deploy
+
+Build command:
+
+```bash
+npm run build
+```
+
+Publish directory:
 
 ```text
-https://df-forex.netlify.app
+site
 ```
 
-## Deploy Netlify
+## SQL
+
+Rode no Supabase:
 
 ```text
-Build command: npm run build
-Publish directory: site
-Functions directory: netlify/functions
+supabase/mt5_bridge_schema.sql
 ```
 
-## Variáveis obrigatórias no Netlify
+## Netlify env
 
-Nunca coloque tokens dentro do GitHub. Configure em:
+Veja `docs/MT5_BRIDGE_SETUP.md`.
 
-```text
-Netlify > Site configuration > Environment variables
-```
+## Atenção
 
-```env
-PUBLIC_SITE_URL=https://df-forex.netlify.app
-SUPABASE_URL=
-SUPABASE_SERVICE_ROLE_KEY=
-```
+Este projeto não promete lucro. Use primeiro em demo. Conta real só deve ser liberada após validação em demo e com travas de risco.
 
-## Conexão por Token API Deriv / PAT
 
-Para demo:
+## Instalador completo Windows v3.3
 
-```env
-DERIV_API_TOKEN_DEMO=COLE_SEU_TOKEN_DEMO_DERIV_AQUI
-ACCOUNT_TYPE=demo
-```
+Use `INSTALAR_TUDO_DF_FOREX.bat` para preparar o ambiente local, dependências Node, `.env`, variáveis do Netlify e instalação do EA Bridge no MetaTrader 5. O modo padrão continua seguro: DEMO / DRY_RUN / SEM ORDEM REAL.
 
-Para real:
+## v3.3 - Ambiente provisório pré-preenchido
 
-```env
-DERIV_API_TOKEN_LIVE=COLE_SEU_TOKEN_REAL_DERIV_AQUI
-ACCOUNT_TYPE=real
-```
-
-O painel também permite colar o token temporariamente na aba **Operação > Token API**. Nesse caso, o token fica só na sessão do navegador.
-
-## Modo seguro padrão
-
-```env
-BOT_MODE=dry_run
-ACCOUNT_TYPE=demo
-ENABLE_ORDER_EXECUTION=false
-DERIV_ENABLE_ORDER_EXECUTION=false
-ALLOW_LIVE_TRADING=false
-```
-
-## Operação demo pela Deriv API
-
-Depois de validar conexão, Supabase e painel:
-
-```env
-BOT_MODE=live
-ACCOUNT_TYPE=demo
-ENABLE_ORDER_EXECUTION=true
-DERIV_ENABLE_ORDER_EXECUTION=true
-ALLOW_LIVE_TRADING=false
-DERIV_DEFAULT_STAKE=1
-DERIV_CONTRACT_DURATION=5
-DERIV_CONTRACT_DURATION_UNIT=m
-MAX_TRADES_PER_RUN=1
-```
-
-## Operação real
-
-Somente depois da demo validada:
-
-```env
-BOT_MODE=live
-ACCOUNT_TYPE=real
-ENABLE_ORDER_EXECUTION=true
-DERIV_ENABLE_ORDER_EXECUTION=true
-ALLOW_LIVE_TRADING=true
-```
-
-O painel ainda exige seleção de Conta Real e confirmação antes de iniciar.
-
-## Deriv MT5 Bridge
-
-A Deriv API direta opera contratos da plataforma Deriv API. Para Forex/CFD tradicional com MT5, lote, stop loss e take profit, use a aba **Deriv MT5** e o Expert Advisor:
-
-```text
-mt5/DF_Forex_Pro_Bridge.mq5
-```
-
-O painel Netlify não consegue controlar o MT5 sozinho. O MT5 precisa estar aberto no desktop/VPS com o EA Bridge rodando.
-
-Leia: `docs/DERIV_MT5_BRIDGE.md`.
+Esta versão inclui `.env` local e `NETLIFY_ENV_COPIAR.txt` já preenchidos para teste.
+Esses arquivos são sensíveis e estão no `.gitignore`, portanto o bot de upload não deve enviá-los ao GitHub.
+Depois de validar o fluxo completo, rotacione/troque as chaves no Supabase e atualize as variáveis no Netlify.

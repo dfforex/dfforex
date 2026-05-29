@@ -1,8 +1,8 @@
 {
-  "name": "df-forex-pro-netlify",
-  "version": "2.9.0",
+  "name": "df-forex-pro-netlify-mt5-bridge",
+  "version": "3.3.0",
   "private": true,
-  "description": "DF Forex Pro - Netlify Node com abas internas, conexão por Token API Deriv, OAuth com App ID obrigatório, abas internas e ponte Deriv MT5.",
+  "description": "DF Forex Pro v3.3 - Painel Netlify + Supabase + MT5 Bridge com instalador completo Windows e ambiente provisório pré-preenchido.",
   "type": "module",
   "scripts": {
     "dev": "netlify dev --port 8787",
@@ -11,8 +11,7 @@
     "start": "netlify dev --port 8787"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.48.1",
-    "ws": "^8.18.0"
+    "@supabase/supabase-js": "^2.48.1"
   },
   "devDependencies": {
     "@netlify/functions": "^2.8.2",

@@ -1,36 +1,44 @@
-import { json } from '../../lib/http.js';
-import { getConfig, executionIsHardBlocked } from '../../lib/config.js';
-import { insertLog } from '../../lib/supabaseAdmin.js';
-
-function checkBridgeToken(event) {
-  const expected = process.env.MT5_BRIDGE_TOKEN || '';
-  if (!expected) return { ok: false, reason: 'MT5_BRIDGE_TOKEN não configurado no Netlify' };
-  const got = (event.headers?.authorization || '').replace(/^Bearer\s+/i, '') || event.queryStringParameters?.token || '';
-  return got === expected ? { ok: true } : { ok: false, reason: 'Token do bridge inválido' };
-}
+import { json, options, nowIso } from '../../lib/http.js';
+import { getConfig } from '../../lib/config.js';
+import { requireSupabase, verifyBridgeSecret, normalizeBridgeId } from '../../lib/mt5Bridge.js';
 
 export async function handler(event) {
-  const auth = checkBridgeToken(event);
-  if (!auth.ok) return json(401, { ok: false, error: auth.reason });
+  if (event.httpMethod === 'OPTIONS') return options();
+  if (event.httpMethod !== 'GET') return json(405, { ok: false, error: 'Use GET' });
+
   const cfg = getConfig();
-  const hard = executionIsHardBlocked(cfg);
-  const payload = event.httpMethod === 'POST' ? JSON.parse(event.body || '{}') : event.queryStringParameters || {};
-  await insertLog('mt5_heartbeat', 'MT5 Bridge heartbeat', {
-    ...payload,
-    broker: 'deriv_mt5',
-    account_type: cfg.accountType,
-    blocked: hard.blocked,
-    reasons: hard.reasons
-  });
-  // MVP seguro: por padrão não envia comandos de trade ao EA. As estratégias do painel podem ser ativadas depois via tabela/fila.
+  const check = verifyBridgeSecret(event, cfg);
+  if (!check.ok) return json(401, { ok: false, error: check.error });
+
+  const bridgeId = normalizeBridgeId(event, {});
+  const supabase = requireSupabase();
+  const { data, error } = await supabase
+    .from('mt5_commands')
+    .select('*')
+    .eq('bridge_id', bridgeId)
+    .eq('status', 'queued')
+    .order('created_at', { ascending: true })
+    .limit(1);
+  if (error) return json(500, { ok: false, error: error.message });
+
+  const command = data?.[0] || null;
+  if (command) {
+    await supabase.from('mt5_commands').update({ status: 'sent', sent_at: nowIso() }).eq('id', command.id);
+  }
+
   return json(200, {
     ok: true,
-    action: 'none',
-    broker: 'deriv_mt5',
-    mode: cfg.botMode,
-    account_type: cfg.accountType,
-    execution_blocked: hard.blocked,
-    block_reasons: hard.reasons,
-    message: hard.blocked ? 'Bridge online; execução bloqueada por segurança.' : 'Bridge online; aguardando fila de comandos.'
+    bridge_id: bridgeId,
+    server_time: nowIso(),
+    config: {
+      bot_mode: cfg.botMode,
+      account_type: cfg.accountType,
+      enable_execution: cfg.enableExecution,
+      allow_live_trading: cfg.allowLiveTrading,
+      max_risk_per_trade_pct: cfg.risk.maxRiskPerTradePct,
+      min_signal_score: cfg.risk.minSignalScore,
+      symbols: cfg.symbols
+    },
+    command
   });
 }

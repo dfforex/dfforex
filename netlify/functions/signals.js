@@ -1,9 +1,10 @@
-import { json } from '../../lib/http.js';
-import { getSupabaseAdmin } from '../../lib/supabaseAdmin.js';
+import { json, options } from '../../lib/http.js';
+import { requireSupabase } from '../../lib/mt5Bridge.js';
 
-export async function handler() {
-  const supabase = getSupabaseAdmin();
-  if (!supabase) return json(200, { ok: true, signals: [], warning: 'Supabase não configurado' });
-  const { data, error } = await supabase.from('strategy_signals').select('*').order('created_at', { ascending: false }).limit(50);
-  return json(error ? 500 : 200, error ? { ok: false, error: error.message } : { ok: true, signals: data });
+export async function handler(event) {
+  if (event.httpMethod === 'OPTIONS') return options();
+  const supabase = requireSupabase();
+  const { data, error } = await supabase.from('strategy_signals').select('*').order('created_at', { ascending: false }).limit(100);
+  if (error) return json(500, { ok: false, error: error.message });
+  return json(200, { ok: true, signals: data || [] });
 }
