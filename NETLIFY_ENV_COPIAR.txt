@@ -1,5 +1,5 @@
-Copie estas variáveis no Netlify > Site configuration > Environment variables.
-ATENÇÃO: credenciais provisórias para teste. Não subir este arquivo ao GitHub.
+﻿Copie estas variaveis no Netlify > Site configuration > Environment variables.
+ATENCAO: credenciais provisorias para teste. Nao subir este arquivo ao GitHub.
 Depois de validar funcionamento, troque/rotacione as chaves no Supabase e atualize no Netlify.
 
 PUBLIC_SITE_URL=https://df-forex.netlify.app
