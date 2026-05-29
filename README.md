@@ -1,4 +1,4 @@
-# DF Forex Pro v2.3 — Netlify + Deriv + Supabase
+# DF Forex Pro v2.4 — Netlify + Deriv + Supabase
 
 Painel operacional para automação Forex/Deriv com:
 
@@ -77,3 +77,8 @@ ALLOW_LIVE_TRADING=true
 ```
 
 O painel ainda exige seleção de Conta Real e confirmação antes de iniciar.
+
+
+## Correção Deriv retorno automático v2.4
+
+Configure `PUBLIC_SITE_URL=https://df-forex.netlify.app` e use OAuth2 PKCE com `DERIV_OAUTH_CLIENT_ID` sempre que possível. O callback obrigatório é `https://df-forex.netlify.app/deriv-callback.html`. Consulte `docs/DERIV_RETORNO_AUTOMATICO.md`.

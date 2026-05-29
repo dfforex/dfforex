@@ -31,3 +31,17 @@ MIN_SIGNAL_SCORE=80
 ```
 
 A `SUPABASE_SERVICE_ROLE_KEY` nunca deve ser colocada no frontend ou no GitHub.
+
+## Deriv retorno automático
+
+Para o site oficial:
+
+```env
+PUBLIC_SITE_URL=https://df-forex.netlify.app
+DERIV_AUTH_MODE=oauth2_pkce
+DERIV_OAUTH_CLIENT_ID=SEU_CLIENT_ID_DERIV
+DERIV_OAUTH_REDIRECT_URI=https://df-forex.netlify.app/deriv-callback.html
+DERIV_OAUTH_SCOPE=trade account_manage
+```
+
+Se usar OAuth legado, configure `DERIV_LEGACY_APP_ID` e garanta que o Website URL do app Deriv seja `https://df-forex.netlify.app/deriv-callback.html`.

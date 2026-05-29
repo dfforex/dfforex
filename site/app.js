@@ -183,7 +183,22 @@ async function loginWithDeriv() {
   try {
     const res = await fetch('/api/deriv-oauth-url', { cache: 'no-store' });
     const data = await res.json();
-    if (!data.ok || !data.authorize_url) throw new Error(data.error || 'Não foi possível gerar URL de login Deriv.');
+    if (!data.ok || !data.authorize_url) throw new Error(data.error?.message || data.error || 'Não foi possível gerar URL de login Deriv.');
+
+    if (data.mode === 'oauth2_pkce') {
+      sessionStorage.setItem('df_deriv_oauth_state', data.state || '');
+      sessionStorage.setItem('df_deriv_pkce_code_verifier', data.code_verifier || '');
+      sessionStorage.setItem('df_deriv_oauth_redirect_uri', data.callback_url || `${window.location.origin}/deriv-callback.html`);
+    } else {
+      sessionStorage.removeItem('df_deriv_oauth_state');
+      sessionStorage.removeItem('df_deriv_pkce_code_verifier');
+      if (data.warning) showToast(data.warning);
+    }
+
+    if (!data.setup_ok && data.setup_hint) {
+      showOutput(`${data.warning || 'Atenção na configuração Deriv.'}\n\n${data.setup_hint}\n\nURL de retorno esperada: ${data.callback_url}`);
+    }
+
     showToast('Redirecionando para a tela oficial da Deriv...');
     window.location.href = data.authorize_url;
   } catch (err) {
@@ -576,7 +591,39 @@ function showToast(message) {
   showToast._timer = setTimeout(() => toast.classList.remove('show'), 4600);
 }
 
+function collectLegacyAccountsFromCurrentUrl() {
+  const query = new URLSearchParams(window.location.search || '');
+  const hash = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  const accounts = [];
+  for (let i = 1; i <= 20; i++) {
+    const acct = query.get(`acct${i}`) || hash.get(`acct${i}`);
+    const token = query.get(`token${i}`) || hash.get(`token${i}`);
+    const currency = query.get(`cur${i}`) || hash.get(`cur${i}`);
+    if (acct && token) accounts.push({ acct, token, currency: (currency || '').toUpperCase(), mode: /^VRTC/i.test(acct) ? 'demo' : 'real' });
+  }
+  return accounts;
+}
+
+function captureLegacyDerivReturnOnIndex() {
+  const accounts = collectLegacyAccountsFromCurrentUrl();
+  if (!accounts.length) return false;
+  sessionStorage.setItem(STORAGE.accounts, JSON.stringify(accounts.map(({ acct, currency, mode }) => ({ acct, currency, mode }))));
+  sessionStorage.setItem(STORAGE.accountsFull, JSON.stringify(accounts));
+  const demo = accounts.find((a) => /^VRTC/i.test(a.acct));
+  const selected = demo || accounts[0];
+  sessionStorage.setItem(STORAGE.token, selected.token);
+  sessionStorage.setItem(STORAGE.loginid, selected.acct);
+  sessionStorage.setItem(STORAGE.currency, selected.currency || '');
+  window.history.replaceState({}, document.title, window.location.pathname);
+  renderAccountOptions();
+  updateDerivLoginStatus();
+  showToast(`Deriv conectada: ${selected.acct}`);
+  setTimeout(() => testDeriv(), 500);
+  return true;
+}
+
 function handleCallbackReturnNotice() {
+  if (captureLegacyDerivReturnOnIndex()) return;
   const params = new URLSearchParams(window.location.search);
   if (params.get('deriv') === 'connected') {
     showToast('Deriv conectada com sucesso. Você voltou automaticamente ao painel.');
