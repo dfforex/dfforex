@@ -39,10 +39,11 @@ function saveAccount(account) {
   sessionStorage.setItem(STORAGE.token, account.token);
   sessionStorage.setItem(STORAGE.loginid, account.acct);
   sessionStorage.setItem(STORAGE.currency, account.currency || '');
+  sessionStorage.setItem('df_deriv_token_source', 'deriv_oauth_login');
 }
 
 function goHome(status = 'connected') {
-  const stored = sessionStorage.getItem(STORAGE.returnTo) || '/';
+  const stored = sessionStorage.getItem(STORAGE.returnTo) || '/#operacao';
   let target = stored && stored.startsWith('/') ? stored : '/';
   const url = new URL(target, window.location.origin);
   url.searchParams.set('deriv', status);
@@ -107,7 +108,7 @@ async function processCallback() {
     return;
   }
 
-  output.textContent = `Não encontrei token de sessão Deriv no retorno. Verifique se o Website URL do app Deriv está configurado como ${window.location.origin}/deriv-callback.html. Voltando ao painel...`;
+  output.textContent = `Não encontrei token de sessão Deriv no retorno. Verifique se no Application Manager da Deriv o Website/OAuth Redirect URL está exatamente ${window.location.origin}/deriv-callback.html. Voltando ao painel...`; 
   setTimeout(() => goHome('error'), 2200);
 }
 

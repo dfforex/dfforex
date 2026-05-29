@@ -1,4 +1,4 @@
-DF Forex Pro v2.8
+DF Forex Pro v2.9
 
 Correções:
 - Corrige erro [object Object] no painel.

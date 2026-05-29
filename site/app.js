@@ -34,7 +34,7 @@ const PAGE_META = {
   logs: ['Sistema', 'Logs técnicos', 'Retorno das chamadas e diagnóstico.']
 };
 
-const DEFAULT_DERIV_APP_ID = '1089';
+const DEFAULT_DERIV_APP_ID = ''; // Sem App ID padrão: usar App ID real da Deriv
 
 const DEFAULT_WATCHLIST = [
   { pair: 'EUR/USD', symbol: 'frxEURUSD', price: '1.08854', change: '+0.21%', dir: 'up' },
@@ -61,7 +61,6 @@ bind('btnBrokerTest', 'click', testDeriv);
 bind('btnHealth', 'click', () => callApi('/api/health'));
 bind('btnDeriv', 'click', testDeriv);
 bind('btnDerivLogin', 'click', loginWithDeriv);
-bind('btnTokenConnect', 'click', connectWithDerivToken);
 bind('btnTopDerivLogin', 'click', () => getDerivLoginId() ? showPage('operacao') : loginWithDeriv());
 bind('btnDerivLogout', 'click', logoutDeriv);
 bind('btnRun', 'click', () => runScan({ execute: false, source: 'manual_scan' }));
@@ -88,11 +87,32 @@ bind('btnMt5StatusBroker', 'click', checkMt5Bridge);
 bind('mt5ServerInput', 'input', () => { localStorage.setItem(STORAGE.mt5Server, el('mt5ServerInput').value.trim()); updateMt5Ui(); });
 bind('mt5LoginInput', 'input', () => { localStorage.setItem(STORAGE.mt5Login, el('mt5LoginInput').value.trim()); updateMt5Ui(); });
 
-document.querySelectorAll('.connect-tab').forEach((btn) => {
-  btn.addEventListener('click', () => showConnectMethod(btn.dataset.connectTab || 'token'));
-});
 
 window.addEventListener('beforeunload', () => { if (botTimer) clearInterval(botTimer); });
+
+// Captura retorno OAuth caso a Deriv volte para / em vez de /deriv-callback.html.
+function captureDerivReturnOnHome() {
+  const qp = new URLSearchParams(window.location.search || '');
+  const hp = new URLSearchParams((window.location.hash || '').replace(/^#/, ''));
+  const acct = qp.get('acct1') || hp.get('acct1');
+  const token = qp.get('token1') || hp.get('token1');
+  if (!acct || !token) return;
+  const accounts = [];
+  for (let i = 1; i <= 20; i++) {
+    const a = qp.get(`acct${i}`) || hp.get(`acct${i}`);
+    const t = qp.get(`token${i}`) || hp.get(`token${i}`);
+    const c = qp.get(`cur${i}`) || hp.get(`cur${i}`);
+    if (a && t) accounts.push({ acct: a, token: t, currency: (c || '').toUpperCase(), mode: /^VRTC/i.test(a) ? 'demo' : 'real' });
+  }
+  if (!accounts.length) return;
+  sessionStorage.setItem(STORAGE.accounts, JSON.stringify(accounts.map(({ acct, currency, mode }) => ({ acct, currency, mode }))));
+  sessionStorage.setItem(STORAGE.accountsFull, JSON.stringify(accounts));
+  const selected = accounts.find((a) => /^VRTC/i.test(a.acct)) || accounts[0];
+  setSelectedAccount(selected);
+  sessionStorage.setItem(STORAGE.tokenSource, 'deriv_oauth_login');
+  window.history.replaceState({}, '', '/#operacao');
+}
+captureDerivReturnOnHome();
 
 document.querySelectorAll('.nav-item').forEach((item) => {
   item.addEventListener('click', () => showPage(item.dataset.page || 'dashboard'));
@@ -131,7 +151,7 @@ function getDerivLoginId() { return sessionStorage.getItem(STORAGE.loginid) || '
 function getDerivCurrency() { return sessionStorage.getItem(STORAGE.currency) || ''; }
 function inferAccountMode(loginid = '') { return /^VRTC/i.test(String(loginid || '')) ? 'demo' : 'real'; }
 function getDerivAppId() {
-  return (el('derivAppIdInputOauth')?.value || localStorage.getItem(STORAGE.derivAppId) || DEFAULT_DERIV_APP_ID).trim() || DEFAULT_DERIV_APP_ID;
+  return (el('derivAppIdInputOauth')?.value || localStorage.getItem(STORAGE.derivAppId) || DEFAULT_DERIV_APP_ID).trim();
 }
 function humanError(value) {
   if (!value) return '';
@@ -312,14 +332,7 @@ async function loginWithDeriv() {
   sessionStorage.setItem(STORAGE.returnTo, '/#operacao');
   try {
     const appId = (el('derivAppIdInputOauth')?.value || localStorage.getItem(STORAGE.derivAppId) || '').trim();
-    if (!appId) {
-      const hint = 'Informe o App ID real criado no Deriv Application Manager ou configure DERIV_LEGACY_APP_ID no Netlify. O login OAuth não funciona com Client/App ID ausente.';
-      setSetupWarning(hint);
-      showOutput(hint);
-      showToast('App ID Deriv obrigatório para login OAuth.');
-      return;
-    }
-    const loginUrl = `/api/deriv-oauth-url?app_id=${encodeURIComponent(appId)}`;
+    const loginUrl = appId ? `/api/deriv-oauth-url?app_id=${encodeURIComponent(appId)}` : '/api/deriv-oauth-url';
     const res = await fetch(loginUrl, { cache: 'no-store' });
     const data = await res.json();
     if (!data.ok || !data.authorize_url) {
@@ -327,6 +340,7 @@ async function loginWithDeriv() {
       setSetupWarning(hint);
       throw new Error(hint);
     }
+    if (data.app_id) localStorage.setItem(STORAGE.derivAppId, String(data.app_id));
     if (data.mode === 'oauth2_pkce') {
       sessionStorage.setItem('df_deriv_oauth_state', data.state || '');
       sessionStorage.setItem('df_deriv_pkce_code_verifier', data.code_verifier || '');
@@ -335,6 +349,7 @@ async function loginWithDeriv() {
       sessionStorage.removeItem('df_deriv_oauth_state');
       sessionStorage.removeItem('df_deriv_pkce_code_verifier');
       if (data.warning) showToast(data.warning);
+      sessionStorage.setItem('df_deriv_oauth_app_id', String(data.app_id || appId || ''));
     }
     if (!data.setup_ok && data.setup_hint) setSetupWarning(data.setup_hint);
     showToast('Redirecionando para a tela oficial da Deriv...');
@@ -716,7 +731,7 @@ function updateDerivLoginStatus(config = lastConfig) {
   if (btnText) btnText.textContent = connected ? 'Trocar conta Deriv' : 'Conectar Deriv';
   if (btn) btn.classList.toggle('connected-button', connected);
   if (el('connectSummaryTitle')) el('connectSummaryTitle').textContent = connected ? `Deriv conectada: ${loginid}` : 'Deriv não conectada';
-  if (el('connectSummaryText')) el('connectSummaryText').textContent = connected ? 'Conta autorizada. Você pode iniciar pela aba Operação.' : 'Acesse a aba Operação para conectar a conta e iniciar os scans.';
+  if (el('connectSummaryText')) el('connectSummaryText').textContent = connected ? 'Conta autorizada. Você pode iniciar pela aba Operação.' : 'Entre com login/senha na tela oficial da Deriv para conectar e iniciar os scans.';
   if (el('btnTopDerivLogin')) el('btnTopDerivLogin').textContent = connected ? 'Ir para Operação' : 'Conectar Deriv';
   updateSelectedAccountHint();
   updateDashboardSelection();

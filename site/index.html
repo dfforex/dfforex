@@ -39,7 +39,7 @@
 
       <div class="version-card">
         <span>DF Forex Pro</span>
-        <strong>v2.8</strong>
+        <strong>v2.9</strong>
         <button id="btnSidebarRefresh">Atualizar dados</button>
       </div>
     </aside>
@@ -114,34 +114,22 @@
           <div class="operation-card connect-card" id="connectCard">
             <span class="tag">1. CONEXÃO</span>
             <h2 id="connectTitle">Conectar Deriv</h2>
-            <p id="connectText">Use a conexão por token para operar imediatamente. O OAuth continua disponível, mas depende do App ID correto no painel da Deriv.</p>
+            <p id="connectText">Entre pela tela oficial da Deriv usando e-mail/senha. O DF Forex Pro não recebe sua senha; a Deriv retorna a autorização automaticamente para o painel.</p>
 
-            <div class="connect-tabs" role="tablist" aria-label="Método de conexão Deriv">
-              <button class="connect-tab active" data-connect-tab="token">Token API</button>
-              <button class="connect-tab" data-connect-tab="oauth">Login Deriv</button>
-              <button class="connect-tab" data-connect-tab="mt5">Deriv MT5</button>
-            </div>
-
-            <div class="connect-method active" data-connect-panel="token">
-              <label class="full-label">Token API Deriv
-                <input id="derivTokenInput" type="password" placeholder="Cole aqui o token criado na Deriv" autocomplete="off" />
+            <div class="login-only-card">
+              <label class="full-label">App ID Deriv
+                <input id="derivAppIdInputOauth" type="text" placeholder="App ID criado no Application Manager da Deriv" autocomplete="off" />
               </label>
               <div class="start-actions wrap-actions">
-                <button class="primary-action" id="btnTokenConnect"><span>✓</span><b>Conectar com token</b></button>
-                <a class="ghost-link" href="https://app.deriv.com/account/api-token" target="_blank" rel="noopener">Criar token na Deriv</a>
+                <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Entrar com Deriv</b></button>
+                <a class="ghost-link" href="https://api.deriv.com/dashboard/applications" target="_blank" rel="noopener">Criar/App ID na Deriv</a>
               </div>
-              <p class="form-note">Para operar, o token precisa ter escopos <b>Read</b> e <b>Trade</b>. Para apenas testar conexão, use somente <b>Read</b>.</p>
+              <p class="form-note">No app da Deriv, o Website/OAuth Redirect URL precisa ser exatamente <b>https://df-forex.netlify.app/deriv-callback.html</b>. Após o login, a Deriv volta para este painel com as contas autorizadas.</p>
             </div>
 
-            <div class="connect-method" data-connect-panel="oauth">
-              <label class="full-label">App ID Deriv obrigatório para login
-                <input id="derivAppIdInputOauth" type="text" placeholder="Cole o App ID criado em api.deriv.com" autocomplete="off" />
-              </label>
-              <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Conectar Deriv via login</b></button>
-              <p class="form-note">O login oficial exige um App ID real criado no Deriv Application Manager. Configure o Website/OAuth Redirect URL como https://df-forex.netlify.app/deriv-callback.html.</p>
-            </div>
-
-            <div class="connect-method" data-connect-panel="mt5">
+            <details class="mt5-details">
+              <summary>Usar Deriv MT5/CFD via Bridge</summary>
+              <div class="connect-method active" data-connect-panel="mt5">
               <div class="mt5-info-card">
                 <b>Conta Deriv MT5 detectada</b>
                 <span>Use este modo para Forex/CFD com MetaTrader 5, lote, stop loss e take profit.</span>
@@ -159,7 +147,8 @@
                 <button class="action-button" id="btnMt5Status"><span>↔</span>Testar Bridge MT5</button>
               </div>
               <p class="form-note">O Web Terminal da Deriv mostra o login, mas não roda Expert Advisor. Para operar automaticamente em MT5, instale o MT5 desktop/VPS e o arquivo <b>mt5/DF_Forex_Pro_Bridge.mq5</b>.</p>
-            </div>
+              </div>
+            </details>
 
             <button class="ghost-action compact" id="btnDerivLogout">Sair / Trocar conta</button>
             <div class="setup-warning" id="derivSetupWarning"></div>
@@ -264,7 +253,7 @@
         <div class="dashboard-grid compact-grid">
           <div class="panel">
             <div class="panel-head"><div><p class="eyebrow">Corretora</p><h2>Deriv API / Token</h2></div><button class="mini-button" id="btnBrokerTest">Testar conexão</button></div>
-            <p class="subtitle">Modo recomendado para contratos Deriv API. O painel recebe token autorizado e executa apenas se as travas estiverem liberadas.</p>
+            <p class="subtitle">Login oficial Deriv por OAuth. O painel recebe autorização da Deriv após o login, sem capturar senha.</p>
             <pre id="configBox">Aguardando configuração...</pre>
           </div>
           <div class="panel">

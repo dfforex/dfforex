@@ -1,4 +1,4 @@
-# DF Forex Pro v2.8 — Netlify + Deriv PAT + Supabase + MT5 Bridge
+# DF Forex Pro v2.9 — Netlify + Deriv PAT + Supabase + MT5 Bridge
 
 Painel operacional para automação Forex/Deriv com:
 
