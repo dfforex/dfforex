@@ -1,64 +1,79 @@
-# DF Forex Pro v2.2 — Netlify + Supabase + Deriv Login
+# DF Forex Pro v2.3 — Netlify + Deriv + Supabase
 
-Versão sem Python local, feita para GitHub + Netlify.
+Painel operacional para automação Forex/Deriv com:
 
-## Novidades da v2.2
+- layout premium;
+- login oficial Deriv com retorno automático para o painel;
+- seleção de Conta Demo ou Conta Real;
+- seleção da conta Deriv retornada no OAuth;
+- botão **Iniciar operações**;
+- execução de scans automáticos enquanto a aba está aberta;
+- registro de sinais e entradas no Supabase;
+- sincronização de contratos abertos para mostrar ganho/perda;
+- travas de segurança para impedir operação real acidental.
 
-- Painel redesenhado com layout premium, sidebar, métricas, watchlist, risco e tabelas.
-- Logo DF aplicada no app e no favicon.
-- O Supabase continua somente no backend/Netlify Functions; o painel não pede chave.
-- Login Deriv via tela oficial da Deriv.
-- Depois do login, a Deriv retorna para `/deriv-callback.html` e o app volta automaticamente ao painel com `?deriv=connected`.
-- Execução real permanece bloqueada por padrão.
+## Site
 
-## Website URL da Deriv
-
-No app/API da Deriv, configure o Website URL como:
-
-```text
-https://delicate-longma-e8f8d2.netlify.app/deriv-callback.html
-```
-
-Para teste local com Netlify Dev:
+Configure no app/API da Deriv o Website URL:
 
 ```text
-http://localhost:8787/deriv-callback.html
+https://df-forex.netlify.app/deriv-callback.html
 ```
 
-## Variáveis no Netlify
-
-Configure em Site configuration > Environment variables:
-
-```env
-SUPABASE_URL=...
-SUPABASE_SERVICE_ROLE_KEY=...
-
-PUBLIC_SITE_URL=https://delicate-longma-e8f8d2.netlify.app
-DERIV_AUTH_MODE=legacy_oauth_or_pat
-DERIV_APP_ID=SEU_APP_ID_DERIV
-DERIV_LEGACY_APP_ID=SEU_APP_ID_DERIV
-
-BOT_MODE=dry_run
-ACCOUNT_TYPE=demo
-ENABLE_ORDER_EXECUTION=false
-ALLOW_LIVE_TRADING=false
-DERIV_ENABLE_ORDER_EXECUTION=false
-DERIV_TRADE_MODE=data_only
-FOREX_SYMBOLS=frxEURUSD,frxGBPUSD,frxUSDJPY,frxAUDUSD
-```
-
-Nunca suba `.env` para o GitHub.
-
-## Deploy
-
-```bash
-npm install
-npm run build
-```
-
-No Netlify:
+## Deploy Netlify
 
 ```text
 Build command: npm run build
 Publish directory: site
+Functions directory: netlify/functions
 ```
+
+## Variáveis obrigatórias
+
+```env
+SUPABASE_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+PUBLIC_SITE_URL=https://df-forex.netlify.app
+DERIV_APP_ID=
+DERIV_LEGACY_APP_ID=
+```
+
+## Modo seguro padrão
+
+```env
+BOT_MODE=dry_run
+ACCOUNT_TYPE=demo
+ENABLE_ORDER_EXECUTION=false
+DERIV_ENABLE_ORDER_EXECUTION=false
+ALLOW_LIVE_TRADING=false
+```
+
+## Operação demo pela Deriv API
+
+Para enviar ordens na conta demo, ajuste no Netlify:
+
+```env
+BOT_MODE=live
+ACCOUNT_TYPE=demo
+ENABLE_ORDER_EXECUTION=true
+DERIV_ENABLE_ORDER_EXECUTION=true
+ALLOW_LIVE_TRADING=false
+DERIV_DEFAULT_STAKE=1
+DERIV_CONTRACT_DURATION=5
+DERIV_CONTRACT_DURATION_UNIT=m
+MAX_TRADES_PER_RUN=1
+```
+
+## Operação real
+
+Somente após validar em demo. Requer:
+
+```env
+BOT_MODE=live
+ACCOUNT_TYPE=real
+ENABLE_ORDER_EXECUTION=true
+DERIV_ENABLE_ORDER_EXECUTION=true
+ALLOW_LIVE_TRADING=true
+```
+
+O painel ainda exige seleção de Conta Real e confirmação antes de iniciar.

@@ -1,4 +1,4 @@
-# Variáveis de ambiente do Netlify — DF Forex Pro v2.2
+# Variáveis de ambiente do Netlify — DF Forex Pro v2.3
 
 Configure em **Netlify > Site configuration > Environment variables**.
 

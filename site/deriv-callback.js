@@ -4,6 +4,7 @@ const STORAGE = {
   loginid: 'df_deriv_loginid',
   currency: 'df_deriv_currency',
   accounts: 'df_deriv_accounts',
+  accountsFull: 'df_deriv_accounts_full',
   returnTo: 'df_deriv_return_to'
 };
 
@@ -59,11 +60,12 @@ async function processCallback() {
 
   const legacyAccounts = collectLegacyAccounts(params);
   if (legacyAccounts.length) {
-    sessionStorage.setItem(STORAGE.accounts, JSON.stringify(legacyAccounts.map(({ acct, currency }) => ({ acct, currency }))));
+    sessionStorage.setItem(STORAGE.accounts, JSON.stringify(legacyAccounts.map(({ acct, currency }) => ({ acct, currency, mode: /^VRTC/i.test(acct) ? 'demo' : 'real' }))));
+    sessionStorage.setItem(STORAGE.accountsFull, JSON.stringify(legacyAccounts.map(({ acct, token, currency }) => ({ acct, token, currency, mode: /^VRTC/i.test(acct) ? 'demo' : 'real' }))));
     const demo = legacyAccounts.find((a) => /^VRTC/i.test(a.acct));
     const selected = demo || legacyAccounts[0];
     saveAccount(selected);
-    output.textContent = `Conta Deriv conectada: ${selected.acct}. Voltando automaticamente para o painel...`;
+    output.textContent = `Conta Deriv conectada: ${selected.acct}. Contas disponíveis: ${legacyAccounts.map(a => a.acct).join(', ')}. Voltando automaticamente para o painel...`;
     setTimeout(() => goHome('connected'), 350);
     return;
   }

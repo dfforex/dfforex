@@ -16,6 +16,10 @@ export async function handler() {
       demo_token_configured: Boolean(cfg.deriv.tokenDemo),
       live_token_configured: Boolean(cfg.deriv.tokenLive),
       trade_mode: cfg.deriv.tradeMode,
+      default_stake: cfg.deriv.defaultStake,
+      contract_duration: cfg.deriv.contractDuration,
+      contract_duration_unit: cfg.deriv.contractDurationUnit,
+      order_execution_enabled: cfg.deriv.enableOrderExecution,
       auth: getSafeAuthStatus()
     },
     safety: {

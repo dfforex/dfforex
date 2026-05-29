@@ -36,7 +36,7 @@
 
       <div class="version-card">
         <span>DF Forex Pro</span>
-        <strong>v2.2</strong>
+        <strong>v2.3</strong>
         <button id="btnSidebarRefresh">Atualizar dados</button>
       </div>
     </aside>
@@ -46,7 +46,7 @@
         <div>
           <p class="eyebrow">Painel operacional</p>
           <h1>Dashboard de automação Forex</h1>
-          <span class="subtitle">Netlify + Supabase + Deriv API em modo seguro.</span>
+          <span class="subtitle">Netlify + Supabase + Deriv API com seleção Demo/Real e operação monitorada.</span>
         </div>
         <div class="top-actions">
           <div class="status-pill" id="supabasePill"><span class="dot"></span><div><b>Supabase</b><small>Verificando</small></div></div>
@@ -62,7 +62,7 @@
           <div>
             <span class="tag">MODO ATIVO</span>
             <h2 id="modeTitle">DEMO / DRY RUN</h2>
-            <p>Execução simulada. Nenhuma ordem real é enviada por padrão.</p>
+            <p id="modeDescription">Selecione Demo ou Real, conecte a Deriv e inicie as estratégias pelo painel.</p>
           </div>
         </div>
         <div class="hero-metrics">
@@ -75,17 +75,66 @@
         </div>
       </section>
 
-      <section class="action-row">
-        <button class="primary-action" id="btnDerivLogin"><span>↗</span>Conectar Deriv</button>
+      <section class="operation-console" id="operationConsole">
+        <div class="operation-card connect-card" id="connectCard">
+          <span class="tag">1. Conexão</span>
+          <h2 id="connectTitle">Conectar Deriv</h2>
+          <p id="connectText">Entre pela tela oficial da Deriv. Ao finalizar, você volta automaticamente para este painel.</p>
+          <button class="primary-action" id="btnDerivLogin"><span>↗</span><b id="btnDerivLoginText">Conectar Deriv</b></button>
+          <button class="ghost-action compact" id="btnDerivLogout">Sair/Trocar conta</button>
+        </div>
+
+        <div class="operation-card">
+          <span class="tag">2. Conta operacional</span>
+          <h2>Selecionar conta</h2>
+          <div class="form-grid">
+            <label>Ambiente
+              <select id="accountModeSelect">
+                <option value="demo" selected>Conta Demo</option>
+                <option value="real">Conta Real</option>
+              </select>
+            </label>
+            <label>Conta Deriv
+              <select id="derivAccountSelect">
+                <option value="">Conecte a Deriv</option>
+              </select>
+            </label>
+            <label>Stake por entrada
+              <input id="stakeInput" type="number" min="0.35" step="0.01" value="1" />
+            </label>
+            <label>Duração
+              <select id="durationSelect">
+                <option value="3">3 minutos</option>
+                <option value="5" selected>5 minutos</option>
+                <option value="10">10 minutos</option>
+                <option value="15">15 minutos</option>
+              </select>
+            </label>
+          </div>
+          <p class="form-note" id="selectedAccountHint">Nenhuma conta selecionada.</p>
+        </div>
+
+        <div class="operation-card start-card">
+          <span class="tag">3. Estratégias</span>
+          <h2 id="botControlTitle">Bot pausado</h2>
+          <p id="botControlText">Clique para iniciar os scans automáticos e registrar entradas, resultado, ganho e perda.</p>
+          <div class="start-actions">
+            <button class="success-action" id="btnStartOperations"><span>▶</span>Iniciar operações</button>
+            <button class="warning-action" id="btnStopOperations"><span>Ⅱ</span>Pausar</button>
+            <button class="action-button" id="btnRun"><span>◉</span>Scan único</button>
+          </div>
+          <small id="botIntervalStatus">Intervalo: 60s • aguardando início</small>
+        </div>
+      </section>
+
+      <section class="action-row secondary-actions">
         <button class="action-button" id="btnDeriv"><span>✓</span>Testar Deriv</button>
-        <button class="action-button" id="btnRun"><span>◉</span>Run Scan</button>
-        <button class="warning-action" id="btnPause"><span>Ⅱ</span>Pausar Bot</button>
-        <button class="action-button" id="btnRefresh"><span>⟳</span>Atualizar</button>
-        <button class="ghost-action" id="btnDerivLogout">Sair Deriv</button>
+        <button class="action-button" id="btnRefresh"><span>⟳</span>Atualizar painel</button>
+        <button class="mini-button" id="btnSyncOrders">Sincronizar resultados</button>
       </section>
 
       <section class="notice" id="noticeBox">
-        <strong>Ambiente seguro:</strong> chaves secretas ficam somente no Netlify/Supabase backend. O login da Deriv abre a tela oficial da Deriv e retorna automaticamente para este painel.
+        <strong>Operacional:</strong> em Demo o sistema pode executar contratos pela API se as variáveis de execução estiverem liberadas no Netlify. Em Real, além da seleção no painel, é obrigatório liberar as travas de ambiente no Netlify para evitar operação acidental.
       </section>
 
       <div class="content-grid">
